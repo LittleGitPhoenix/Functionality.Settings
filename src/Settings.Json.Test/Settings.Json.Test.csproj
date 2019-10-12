@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<AssemblyName>Phoenix.Functionality.Settings.Json.Test</AssemblyName>
+		<RootNamespace>Phoenix.Functionality.Settings.Json.Test</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include=".settings\ExistingSettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
+		<PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
+		<PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Settings.Json.Net\Settings.Json.Net.csproj" />
+		<ProjectReference Include="..\Settings\Settings.csproj" />
+	</ItemGroup>
+
+</Project>

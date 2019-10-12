@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<AssemblyName>Phoenix.Functionality.Settings.Json.Net</AssemblyName>
+		<RootNamespace>Phoenix.Functionality.Settings.Json.Net</RootNamespace>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSymbols>true</IncludeSymbols>
+		<Version>1.0.3</Version>
+		<Authors>Felix Leistner</Authors>
+		<Company>PhoenixLittle</Company>
+		<Copyright>2020</Copyright>
+		<Description>
+			JSON based implementation for the common settings infastructure using JsonSerializer.
+			⚠ Currently (de)serialization of dictionaries is only supported for 'Dictionary&lt;string, TPrimitiveType&gt;'.
+		</Description>
+		<PackageId>Phoenix.Functionality.Settings.Json.Net</PackageId>
+		<Product>Phoenix.Functionality.Settings.Json</Product>
+		<PackageIcon>nuget.png</PackageIcon>
+		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+		<PackageIconUrl>https://www.little-phoenix.de/nuget/nuget.ico</PackageIconUrl>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DocumentationFile></DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Text.Json" Version="4.6.0-preview8.19405.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Settings\Settings.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\..\nuget.png" Pack="true" PackagePath="" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<RootNamespace>Phoenix.Functionality.Settings</RootNamespace>
+		<AssemblyName>Phoenix.Functionality.Settings</AssemblyName>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSymbols>true</IncludeSymbols>
+		<Version>1.0.0</Version>
+		<Authors>Felix Leistner</Authors>
+		<Company>Little Phoenix</Company>
+		<Copyright>2020</Copyright>
+		<Description>Common settings infastructure for assemblies.</Description>
+		<PackageId>Phoenix.Functionality.Settings</PackageId>
+		<Product>Phoenix.Functionality.Settings</Product>
+		<PackageIcon>nuget.png</PackageIcon>
+		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+		<PackageIconUrl>https://www.little-phoenix.de/nuget/nuget.ico</PackageIconUrl>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DocumentationFile></DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\..\nuget.png" Pack="true" PackagePath="" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="" />
+		<None Include="..\..\LICENSE.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+</Project>
