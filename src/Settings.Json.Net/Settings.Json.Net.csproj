@@ -7,14 +7,11 @@
 		<RootNamespace>Phoenix.Functionality.Settings.Json.Net</RootNamespace>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeSymbols>true</IncludeSymbols>
-		<Version>1.0.3</Version>
+		<Version>1.1.0</Version>
 		<Authors>Felix Leistner</Authors>
 		<Company>PhoenixLittle</Company>
 		<Copyright>2020</Copyright>
-		<Description>
-			JSON based implementation for the common settings infastructure using JsonSerializer.
-			⚠ Currently (de)serialization of dictionaries is only supported for 'Dictionary&lt;string, TPrimitiveType&gt;'.
-		</Description>
+		<Description>JSON based implementation for the common settings infastructure using JsonSerializer.</Description>
 		<PackageId>Phoenix.Functionality.Settings.Json.Net</PackageId>
 		<Product>Phoenix.Functionality.Settings.Json</Product>
 		<PackageIcon>nuget.png</PackageIcon>
@@ -24,12 +21,8 @@
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DocumentationFile></DocumentationFile>
-	</PropertyGroup>
-
 	<ItemGroup>
-		<PackageReference Include="System.Text.Json" Version="4.6.0-preview8.19405.3" />
+		<PackageReference Include="System.Text.Json" Version="4.7.0" />
 	</ItemGroup>
 
 	<ItemGroup>

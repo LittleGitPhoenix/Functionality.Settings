@@ -9,13 +9,13 @@ ___
 
 # General principle
 
-Settings are represented as a simple poco class within an application, so that the program can access its defined properties. In the background, those settings are stored in some kind of external storage. Mostly this are text files of different formats like the commonly used are xml or json files. A typical settings provider now has the task, of synchronizing the externally stored settings with settings class of the application.
+Settings are represented as a simple poco class within an application, so that the program can access its defined properties. In the background, those settings are stored in some kind of external storage. This storage could be text files of different formats like the commonly used xml or json files. A typical settings provider now has the task of synchronizing the externally stored settings with the settings class of the application.
 
 # Usage
 
-To provide settings for an application, a simple poco class containing some properties has to be created. To use the class with this settings library, it must implement the empty **_ISettings_** interface. Loading and saving the settings is the purpose of an **_ISettingsManager_**. The concrete implementation of such an ISettingsManager handles the details of synchronizing the data source and the settings class.
+To provide settings for an application, a simple class containing the relevant properties has to be created. To use the class with this settings library, it must implement the empty **_ISettings_** interface. Loading and saving the settings is the responsibility of an **_ISettingsManager_**. The concrete implementation of such an **_ISettingsManager_** handles the details of synchronizing the data source and the settings class.
 
-Here is an example on how to set up using settings:
+Here is an example showing how an **_ISettingsManager_** is used to obtain a settings instance:
 
 ``` csharp
 var settingsManager = new ISettingsManager(); // Obviously this has to be replace with a concrete class.
@@ -28,6 +28,7 @@ Each settings manager should provide an internal **_ISettingsCache_**, so that l
 
 Concrete implementations of **_ISettingsManager_** are provided as separate NuGet packages. Currently the following are available.
 ___
+
 **_Json.Net_**
 
 | .NET Framework | .NET Standard | .NET Core |
@@ -36,6 +37,9 @@ ___
 
 This settings manager uses json files as storage. Serialization and deserialization is based on **_System.Text.Json_**. The file name of the settings file must equal the class name suffixed by ".json". This can be overridden by **_SettingsFileNameAttribute_**.
 
+> **Restrictions:**  
+Currently only dictionaries of type **Dictionary<string, TPrimitiveType>** can be (de)serialization by this manager.>
+
 **Creation** via fluent syntax is supported.
 ``` csharp
 var settingsManager = JsonSettingsManager
@@ -47,14 +51,12 @@ var settingsManager = JsonSettingsManager
                       
                       .WithoutCache()                                 // Do not use file caching.
                       .WithCache()                                    // Use normal file caching.
-                      .WithWeakCache()                                // Files are only cached as long as something stll references them
+                      .WithWeakCache()                                // Files are only cached as long as something still references them
                       
                       .Build();
 ```
-
-**Restrictions:**
-Currently (de)serialization of dictionaries is only supported for 'Dictionary<string, TPrimitiveType>'.
 ___
+
 **_Json.Newtonsoft_**
 
 | .NET Framework | .NET Standard | .NET Core |
@@ -63,6 +65,9 @@ ___
 
 This settings manager uses json files as storage. Serialization and deserialization is based on **_Newtonsoft.Json_**. The file name of the settings file must equal the class name suffixed by ".json". This can be overridden by **_SettingsFileNameAttribute_**.
 
+> **Restrictions:**  
+The Newtonsoft (de)serializer prevents dynamically via **_System.Runtime.Loader.AssemblyLoadContext_** loaded assemblies to get properly unloaded, due to not properly released references.>
+
 **Creation** via fluent syntax is supported.
 ``` csharp
 var settingsManager = JsonSettingsManager
@@ -74,13 +79,10 @@ var settingsManager = JsonSettingsManager
                       
                       .WithoutCache()                                 // Do not use file caching.
                       .WithCache()                                    // Use normal file caching.
-                      .WithWeakCache()                                // Files are only cached as long as something stll references them
+                      .WithWeakCache()                                // Files are only cached as long as something still references them
                       
                       .Build();
 ```
-
-**Restrictions:**
-The Newtonsoft (de)serializer prevents dynamically via **_System.Runtime.Loader.AssemblyLoadContext_** loaded assemblies to get properly unloaded, due to not properly released references.
 
 # Attributes
 
@@ -94,9 +96,17 @@ Defines a custom name for an **_ISettings_** class, that may be used to find the
 
 A custom description for an **_ISettings_** class or one of its properties.
 
-- **_NestedSettingsAttribute_**
+# Extension Methods
 
-Defines a property of an **_ISettings_** class as nested. This way synchronization of this property will recursively iterate over all properties of the nested class. 
+To make using **_ISettings_** classes as easy as possible, some convenient extension methods are available. In order for those methods to properly function, it has to be known which **_ISettingsManager_** is responsible for (de)serializing the settings instance. To provide this manager, a method that is currently hidden from **IntelliSense** named **_SettingsExtensions.InitializeExtensionMethods(this ISettings settings, ISettingsManager settingsManager)_** must be invoked prior to using any of the other methods. When using one of the above **_ISettingsManager_** implementations, this method will automatically be called upon loading a settings instance.
+
+- **_ISettings.Save_**
+
+This saves the current settings instance to the data store.
+
+- **_ISettings.Reload_**
+
+This reloads and returns the settings. Note that the original settings passed to the extension method will stay unchanged.
 
 # Authors
 

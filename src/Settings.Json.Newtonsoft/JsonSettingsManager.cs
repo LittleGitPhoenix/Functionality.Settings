@@ -50,7 +50,6 @@ namespace Phoenix.Functionality.Settings.Json.Newtonsoft
 		#region Properties
 		
 		/// <inheritdoc />
-
 		public ISettingsCache Cache { get; }
 
 		#endregion
@@ -139,6 +138,9 @@ namespace Phoenix.Functionality.Settings.Json.Newtonsoft
 
 				// Save the changed settings if necessary.
 				if (!preventUpdate && JsonSettingsManager.ShouldSettingsFileBeUpdated(settingsFile, settings)) this.Save(settings, createBackup: true);
+
+				// Setup usage of the special extension methods.
+				settings.InitializeExtensionMethods(this);
 
 				// Return the loaded settings.
 				return settings;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Phoenix.Functionality.Settings;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Phoenix.Functionality.Settings.Cache;
 

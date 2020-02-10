@@ -47,7 +47,6 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		#region Properties
 		
 		/// <inheritdoc />
-
 		public ISettingsCache Cache { get; }
 
 		#endregion
@@ -136,6 +135,9 @@ namespace Phoenix.Functionality.Settings.Json.Net
 
 				// Save the changed settings if necessary.
 				if (!preventUpdate && JsonSettingsManager.ShouldSettingsFileBeUpdatedAsync(settingsFile, settings).Result) this.Save(settings, createBackup: true);
+
+				// Setup usage of the special extension methods.
+				settings.InitializeExtensionMethods(this);
 
 				// Return the loaded settings.
 				return settings;
