@@ -1,18 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
-		<RootNamespace>Phoenix.Functionality.Settings</RootNamespace>
-		<AssemblyName>Phoenix.Functionality.Settings</AssemblyName>
+		<RootNamespace>Phoenix.Functionality.Settings.Encryption</RootNamespace>
+		<AssemblyName>Phoenix.Functionality.Settings.Encryption</AssemblyName>
 		<Version>2.0.0</Version>
 		<Authors>Felix Leistner</Authors>
 		<Company>Little Phoenix</Company>
 		<Copyright>2021</Copyright>
-		<Description>Common settings infastructure for assemblies.</Description>
-		<PackageId>Phoenix.Functionality.Settings</PackageId>
-		<Product>Phoenix.Functionality.Settings</Product>
+		<Description>Adds property encryption to the Phoenix.Functionality.Settings package.</Description>
+		<PackageId>Phoenix.Functionality.Settings.Encryption</PackageId>
+		<Product>Phoenix.Functionality.Settings.Encryption</Product>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
@@ -22,6 +22,10 @@
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Settings\Settings.csproj" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="..\..\nuget.png" Pack="true" PackagePath="" Link="⬙\nuget.png" />

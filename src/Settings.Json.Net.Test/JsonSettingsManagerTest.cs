@@ -1,10 +1,11 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using NUnit.Framework;
+using Phoenix.Functionality.Settings;
 using Phoenix.Functionality.Settings.Cache;
 using Phoenix.Functionality.Settings.Json.Net;
 
-namespace Phoenix.Functionality.Settings.Json.Test
+namespace Settings.Json.Net.Test
 {
-	[TestClass]
 	public class JsonSettingsManagerTest
 	{
 		#region Data
@@ -16,7 +17,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 
 		#endregion
 
-		[TestMethod]
+		[Test]
 		public void Build_Without_Cache()
 		{
 			var settingsManager = JsonSettingsManager
@@ -31,7 +32,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			Assert.AreEqual(typeof(NoSettingsCache), settingsManager.Cache.GetType());
 		}
 
-		[TestMethod]
+		[Test]
 		public void Build_With_Cache()
 		{
 			var settingsManager = JsonSettingsManager
@@ -46,7 +47,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			Assert.AreEqual(typeof(SettingsCache), settingsManager.Cache.GetType());
 		}
 
-		[TestMethod]
+		[Test]
 		public void Build_With_Weak_Cache()
 		{
 			var settingsManager = JsonSettingsManager
@@ -61,7 +62,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			Assert.AreEqual(typeof(WeakSettingsCache), settingsManager.Cache.GetType());
 		}
 
-		[TestMethod]
+		[Test]
 		public void Get_Settings_Name()
 		{
 			var targetName = $"{typeof(UnnamedSettings).Namespace}.{typeof(UnnamedSettings).Name}";
@@ -72,7 +73,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			Assert.AreEqual(targetName, actualName);
 		}
 
-		[TestMethod]
+		[Test]
 		public void Get_Custom_Settings_Name()
 		{
 			var targetName = $"CustomName";

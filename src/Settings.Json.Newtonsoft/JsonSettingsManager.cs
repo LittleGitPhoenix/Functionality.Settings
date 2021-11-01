@@ -44,13 +44,13 @@ namespace Phoenix.Functionality.Settings.Json.Newtonsoft
 		/// </summary>
 		/// <remarks> By default this is a folder named '.settings' in the <see cref="Directory.GetCurrentDirectory"/>. </remarks>
 		private readonly DirectoryInfo _baseDirectory;
-		
+
 		#endregion
 
 		#region Properties
-		
-		/// <inheritdoc />
-		public ISettingsCache Cache { get; }
+
+		/// <summary> <see cref="ISettingsCache"/> used to store all loaded <see cref="ISettings"/> instances. </summary>
+		internal ISettingsCache Cache { get; }
 
 		#endregion
 

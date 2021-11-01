@@ -14,21 +14,61 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 	/// </summary>
 	public class TimeSpanConverter : JsonConverter<TimeSpan>
 	{
+		#region Deserialization
+
 		/// <inheritdoc />
 		public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			if (reader.TryGetInt64(out var numeric))
-			{
-				return TimeSpan.FromMilliseconds(numeric);
-			}
-
+			if (reader.TryGetInt64(out var numeric) && this.TryDeserialize(numeric, out var timeSpan)) return timeSpan;
 			throw new JsonException($"Cannot convert the value '{reader.GetString()}' of type {reader.TokenType} into a {nameof(TimeSpan)}.");
 		}
 
-		/// <inheritdoc />
-		public override void Write(Utf8JsonWriter writer, TimeSpan value, JsonSerializerOptions options)
+		internal bool TryDeserialize(string value, out TimeSpan timeSpan)
 		{
-			writer.WriteNumberValue((long) value.TotalMilliseconds);
+			if (long.TryParse(value, out var numeric)) return this.TryDeserialize(numeric, out timeSpan);
+
+			timeSpan = default;
+			return false;
 		}
+
+		internal bool TryDeserialize(long numeric, out TimeSpan timeSpan)
+		{
+			timeSpan = TimeSpan.FromMilliseconds(numeric);
+			return true;
+		}
+
+		#endregion
+
+		#region Serialization
+
+		/// <inheritdoc />
+		public override void Write(Utf8JsonWriter writer, TimeSpan timeSpan, JsonSerializerOptions options)
+		{
+			if (this.TrySerialize(timeSpan, out long numeric))
+			{
+				writer.WriteNumberValue(numeric);
+				return;
+			}
+			throw new JsonException($"Cannot convert time span '{timeSpan}' into a string.");
+		}
+
+		internal bool TrySerialize(TimeSpan timeSpan, out string value)
+		{
+			if (this.TrySerialize(timeSpan, out long numeric))
+			{
+				value = numeric.ToString();
+				return true;
+			}
+			value = String.Empty;
+			return false;
+		}
+
+		internal bool TrySerialize(TimeSpan timeSpan, out long numeric)
+		{
+			numeric = (long) timeSpan.TotalMilliseconds;
+			return true;
+		}
+
+		#endregion
 	}
 }

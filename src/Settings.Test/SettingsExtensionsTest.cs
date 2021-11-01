@@ -1,32 +1,41 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Moq;
+using NUnit.Framework;
+using Phoenix.Functionality.Settings;
 
-namespace Phoenix.Functionality.Settings.Test
+namespace Settings.Test
 {
-	[TestClass]
 	public class SettingsExtensionsTest
 	{
+		[SetUp]
+		public void Setup()
+		{
+			SettingsExtensions.Cache.Clear();
+		}
+		
 		#region Reload
 
 		class Settings : ISettings { }
 
 		class OtherSettings : ISettings { }
 
-		[TestMethod]
+		[Test]
 		public void Invoking_Reload_With_Different_Types_Throws()
 		{
 			var settings = new Settings();
-			Assert.ThrowsException<SettingsTypeMismatchException>(() => settings.Reload<OtherSettings>());
+			Assert.Throws<SettingsTypeMismatchException>(() => settings.Reload<OtherSettings>());
 		}
 
-		[TestMethod]
+		[Test]
 		public void Invoking_Reload_Without_Initialization_Throws()
 		{
 			var settings = new Settings();
-			Assert.ThrowsException<MissingSettingsManagerException>(() => settings.Reload<Settings>());
+			Assert.Throws<MissingSettingsManagerException>(() => settings.Reload<Settings>());
 		}
 
-		[TestMethod]
+		[Test]
 		public void Invoking_Reload_Succeeds()
 		{
 			var settingsManagerMock = new Mock<ISettingsManager>();
@@ -41,25 +50,25 @@ namespace Phoenix.Functionality.Settings.Test
 			settings.InitializeExtensionMethods(settingsManager);
 
 			settings.Reload<Settings>(false);
-			settingsManagerMock.Verify(manager => manager.Load<Settings>(true, false), Times.Once);
+			settingsManagerMock.Verify(manager => manager.Load<Settings>(true, false), Times.Once());
 			
 			settings.Reload<Settings>(true);
-			settingsManagerMock.Verify(manager => manager.Load<Settings>(true, true), Times.Once);
+			settingsManagerMock.Verify(manager => manager.Load<Settings>(true, true), Times.Once());
 		}
 
 		#endregion
 
 		#region Save
 
-		[TestMethod]
+		[Test]
 		public void Invoking_Save_Without_Initialization_Throws()
 		{
 			var settingsMock = new Mock<ISettings>();
 			var settings = settingsMock.Object;
-			Assert.ThrowsException<MissingSettingsManagerException>(() => settings.Save());
+			Assert.Throws<MissingSettingsManagerException>(() => settings.Save());
 		}
 
-		[TestMethod]
+		[Test]
 		public void Invoking_Save_Succeeds()
 		{
 			var settingsManagerMock = new Mock<ISettingsManager>();
@@ -75,10 +84,10 @@ namespace Phoenix.Functionality.Settings.Test
 			settings.InitializeExtensionMethods(settingsManager);
 			
 			settings.Save(false);
-			settingsManagerMock.Verify(manager => manager.Save<ISettings>(settings, false), Times.Once);
+			settingsManagerMock.Verify(manager => manager.Save<ISettings>(settings, false), Times.Once());
 
 			settings.Save(true);
-			settingsManagerMock.Verify(manager => manager.Save<ISettings>(settings, true), Times.Once);
+			settingsManagerMock.Verify(manager => manager.Save<ISettings>(settings, true), Times.Once());
 		}
 
 		#endregion

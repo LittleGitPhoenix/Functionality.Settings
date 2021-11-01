@@ -28,7 +28,7 @@ namespace Phoenix.Functionality.Settings
 		/// <summary>
 		/// Cache of all <see cref="ISettingsManager"/> mapped to the concrete <see cref="ISettings"/> type that where loaded with it.
 		/// </summary>
-		private static readonly ConcurrentDictionary<Type, ISettingsManager> Cache;
+		internal static readonly ConcurrentDictionary<Type, ISettingsManager> Cache;
 
 		#endregion
 

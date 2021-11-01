@@ -22,7 +22,7 @@ using Phoenix.Functionality.Settings.Cache;
 namespace Phoenix.Functionality.Settings.Json.Net
 {
 	/// <summary>
-	/// <see cref="ISettingsManager"/> utilizing <see cref="JsonSerializer"/>>.
+	/// <see cref="ISettingsManager"/> utilizing <see cref="JsonSerializer"/>.
 	/// </summary>
 	public class JsonSettingsManager : ISettingsManager
 	{
@@ -41,13 +41,13 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		/// </summary>
 		/// <remarks> By default this is a folder named '.settings' in the <see cref="Directory.GetCurrentDirectory"/>. </remarks>
 		private readonly DirectoryInfo _baseDirectory;
-		
+
 		#endregion
 
 		#region Properties
-		
-		/// <inheritdoc />
-		public ISettingsCache Cache { get; }
+
+		/// <summary> <see cref="ISettingsCache"/> used to store all loaded <see cref="ISettings"/> instances. </summary>
+		internal ISettingsCache Cache { get; }
 
 		#endregion
 
@@ -206,7 +206,11 @@ namespace Phoenix.Functionality.Settings.Json.Net
 			var targetJsonDocument = JsonDocument.Parse(await JsonSettingsManager.SerializeAsync(settings));
 			var targetData = await JsonSettingsManager.ConvertJsonDocumentToData(targetJsonDocument);
 
+#if NETSTANDARD2_0 || NETSTANDARD1_6 || NETSTANDARD1_5 || NETSTANDARD1_4 || NETSTANDARD1_3 || NETSTANDARD1_2 || NETSTANDARD1_1 || NETSTANDARD1_0
 			var actualJsonDocument = JsonDocument.Parse(File.ReadAllText(settingsFile.FullName));
+#else
+			var actualJsonDocument = JsonDocument.Parse(await File.ReadAllTextAsync(settingsFile.FullName));
+#endif
 			var actualData = await JsonSettingsManager.ConvertJsonDocumentToData(actualJsonDocument);
 
 			var areEqual = targetData.SequenceEqual(actualData);

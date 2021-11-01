@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;net4.8</TargetFrameworks>
@@ -15,7 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Settings\Settings.csproj" />
+	  <ProjectReference Include="..\Settings.Encryption\Settings.Encryption.csproj" />
 	</ItemGroup>
 
 </Project>

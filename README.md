@@ -9,36 +9,83 @@ ___
 
 # General principle
 
-Settings are represented as a simple poco class within an application, so that the program can access its defined properties. In the background, those settings are stored in some kind of external storage. This storage could be text files of different formats like the commonly used xml or json files. A typical settings provider now has the task of synchronizing the externally stored settings with the settings class of the application.
+Settings are represented as a simple poco class within an application, so that the program can access its defined properties. In the background, those settings are stored in some kind of external storage. This storage could be text files of different formats like the commonly used **xml** or **json** files. A typical settings provider now has the task of synchronizing the externally stored settings with the settings class of the application.
+___
 
 # Usage
 
-To provide settings for an application, a simple class containing the relevant properties has to be created. To use the class with this settings library, it must implement the empty **_ISettings_** interface. Loading and saving the settings is the responsibility of an **_ISettingsManager_**. The concrete implementation of such an **_ISettingsManager_** handles the details of synchronizing the data source and the settings class.
+To provide settings for an application, a simple class containing the relevant properties has to be created. To use the class with this library, it must implement the empty `ISettings` interface. Loading and saving the settings is the responsibility of an `ISettingsManager`. The specific implementation of such an `ISettingsManager` handles the details of synchronizing the data source and the settings class.
 
-Here is an example showing how an **_ISettingsManager_** is used to obtain a settings instance:
+Here is an example showing how an `ISettingsManager` is used to obtain a settings instance:
 
 ``` csharp
-var settingsManager = new ISettingsManager(); // Obviously this has to be replace with a concrete class.
-var settings = settingsManager.Load<Settings>();
+class MySettings : ISettings {}
+
+var settingsManager = new ISettingsManager(); // Obviously this has to be replace with a specific class.
+var settings = settingsManager.Load<MySettings>();
 ```
-
-Each settings manager should provide an internal **_ISettingsCache_**, so that loading the same settings class multiple times, will always return the same instance.
-
-# ISettingsManager Implementations
-
-Concrete implementations of **_ISettingsManager_** are provided as separate NuGet packages. Currently the following are available.
 ___
 
-**_Json.Net_**
+# SettingsManager Implementations
+
+Specific implementations of `ISettingsManager` are provided as separate NuGet packages. Currently the following are available.
+___
+
+## Json.Net
 
 | .NET Framework | .NET Standard | .NET Core |
 | :-: | :-: | :-: |
 | :heavy_check_mark: 4.6.1 | :heavy_check_mark: 2.0 | :heavy_check_mark: 2.0 |
 
-This settings manager uses json files as storage. Serialization and deserialization is based on **_System.Text.Json_**. The file name of the settings file must equal the class name suffixed by ".json". This can be overridden by **_SettingsFileNameAttribute_**.
+This settings manager uses json files as storage. Serialization and deserialization is based on **System.Text.Json**. The file name of the settings file must equal the class name suffixed by **.json**. This can be overridden by `SettingsFileNameAttribute`.
+
+**Creation** via fluent syntax is supported.
+
+``` csharp
+var settingsManager = JsonSettingsManager
+                      .Construct()
+                                            
+                      .UseDefaultDirectory()                          // "[ApplicationFolder]/.settings" is used.
+                      .WithDirectory(string settingsDirectoryPath)    // The specified path is used.
+                      .WithDirectory(DirectoryInfo settingsDirectory) // The specified directory is used.
+                      
+                      .WithoutCache()                                 // Do not use file caching.
+                      .WithCache()                                    // Use normal file caching.
+                      .WithWeakCache()                                // Files are only cached as long as something still references them
+                      
+                      .Build();
+```
+
+### Custom Converters
+
+The **Phoenix.Functionality.Settings.Json.Net** provides special converters that allow for some common types to be used directly within settings classes. Those converters convert types to and from strings, so that they can be stored in a settings file.
+
+- `FileInfoConverter`
+
+	Relative path are only supported with two parent folders (e.g **../.../MyFolder/Some.file**). Other files will be saved as absolute path.
+
+- `DirectoryInfoConverter`
+
+	Relative path are only supported with two parent folders (e.g **../.../MyFolder**). Other directories will be saved as absolute path.
+
+- `IpAddressConverter`
+
+- `RegexConverter`
+
+- `TimeSpanConverter`
+
+	The string representation is in milliseconds.
+
+## Json.Newtonsoft
+
+| .NET Framework | .NET Standard | .NET Core |
+| :-: | :-: | :-: |
+| :heavy_check_mark: 4.6.1 | :heavy_check_mark: 2.0 | :heavy_check_mark: 2.0 |
+
+This settings manager uses json files as storage. Serialization and deserialization is based on **Newtonsoft.Json**. The file name of the settings file must equal the class name suffixed by **.json**. This can be overridden by `SettingsFileNameAttribute`.
 
 > **Restrictions:**  
-Currently only dictionaries of type **Dictionary<string, TPrimitiveType>** can be (de)serialization by this manager.>
+> The Newtonsoft (de)serializer prevents assemblies that have been loaded dynamically via **System.Runtime.Loader.AssemblyLoadContext** from getting unloaded, due to not properly released references.
 
 **Creation** via fluent syntax is supported.
 ``` csharp
@@ -57,56 +104,88 @@ var settingsManager = JsonSettingsManager
 ```
 ___
 
-**_Json.Newtonsoft_**
+# Caching
 
-| .NET Framework | .NET Standard | .NET Core |
-| :-: | :-: | :-: |
-| :heavy_check_mark: 4.6.1 | :heavy_check_mark: 2.0 | :heavy_check_mark: 2.0 |
+Each settings manager should provide an internal cache, so that loading the same settings class multiple times, will always return the same instance. The following simple cache classes are available. Each of them implements the `ISettingsCache`interface.
 
-This settings manager uses json files as storage. Serialization and deserialization is based on **_Newtonsoft.Json_**. The file name of the settings file must equal the class name suffixed by ".json". This can be overridden by **_SettingsFileNameAttribute_**.
+## NoSettingsCache
 
-> **Restrictions:**  
-The Newtonsoft (de)serializer prevents dynamically via **_System.Runtime.Loader.AssemblyLoadContext_** loaded assemblies to get properly unloaded, due to not properly released references.>
+This variant obviously does not cache anything. It is the default cache used by all available `ISettingsManager`s if not specified otherwise.
 
-**Creation** via fluent syntax is supported.
-``` csharp
-var settingsManager = JsonSettingsManager
-                      .Construct()
-                                            
-                      .UseDefaultDirectory()                          // "[ApplicationFolder]/.settings" is used.
-                      .WithDirectory(string settingsDirectoryPath)    // The specified path is used.
-                      .WithDirectory(DirectoryInfo settingsDirectory) // The specified directory is used.
-                      
-                      .WithoutCache()                                 // Do not use file caching.
-                      .WithCache()                                    // Use normal file caching.
-                      .WithWeakCache()                                // Files are only cached as long as something still references them
-                      
-                      .Build();
-```
+## SettingsCache
+
+This cache stores references to all loaded `ISetting`s instances and can be queried by an `ISettingsManager`.
+
+## WeakSettingsCache
+
+This cache stores all loaded `ISetting`s instances as **WeakReference**. This allows settings instances to be collected by the garbage collector.
+
+___
 
 # Attributes
 
 For modifying certain behavior to or add more information about settings, the following attributes are available:
 
-- **_SettingsFileNameAttribute_**
+| Attribute Name | Description |
+| :- | :- |
+| `SettingsFileNameAttribute` | Defines a custom name for an `ISettings` class, that may be used to find the proper data source. |
+| `SettingsDescriptionAttribute` | A custom description for an `ISettings` class or one of its properties. |
+___
 
-Defines a custom name for an **_ISettings_** class, that may be used to find the proper data source.
+# Saving settings
 
-- **_SettingsDescriptionAttribute_**
+To make saving or reloading `ISettings` instances as easy as possible, some convenient extension methods are available. In order for those methods to properly function, it has to be known which `ISettingsManager` is responsible for (de)serializing the settings instance. To provide this manager, a method that is currently hidden from **IntelliSense** named `SettingsExtensions.InitializeExtensionMethods` must be invoked immediately after the instance was created by its `ISettingsManager`. When using one of the above `ISettingsManager` implementations, this method will automatically be called upon loading a settings instance.
 
-A custom description for an **_ISettings_** class or one of its properties.
+- `ISettings.Save`
 
-# Extension Methods
+	This saves the current settings instance to the data store.
 
-To make using **_ISettings_** classes as easy as possible, some convenient extension methods are available. In order for those methods to properly function, it has to be known which **_ISettingsManager_** is responsible for (de)serializing the settings instance. To provide this manager, a method that is currently hidden from **IntelliSense** named **_SettingsExtensions.InitializeExtensionMethods(this ISettings settings, ISettingsManager settingsManager)_** must be invoked prior to using any of the other methods. When using one of the above **_ISettingsManager_** implementations, this method will automatically be called upon loading a settings instance.
+- `ISettings.Reload`
 
-- **_ISettings.Save_**
+	This reloads and returns the settings. Note that the original settings passed to the extension method will stay unchanged.
 
-This saves the current settings instance to the data store.
+___
 
-- **_ISettings.Reload_**
+# Encryption
 
-This reloads and returns the settings. Note that the original settings passed to the extension method will stay unchanged.
+Some information stored in setting files (like database connection strings) may contain sensitive data and should therefore be encrypted.  This can be achieved via the special `EncryptSettingsManager` . It is a decorator for any other `ISettingsManager` and handles de- or encryption of properties attributed with the `EncryptAttribute`.
+
+<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
+	<span style='margin-left:1em; text-align:left'>
+    	<b>Information</b>
+    </span>
+    <br>
+	<div style='margin-left:1em; margin-right:1em;'>
+        Currently only <b>String</b> or <b>Object</b> property types are supported.
+    </div>
+</div>
+
+To use the `EncryptSettingsManager` simply call the extension method `ApplyEncryption` on any other `ISettingsManager` instance.
+
+```csharp
+var settingsManager = JsonSettingsManager
+	.Construct()
+	.UseDefaultDirectory()
+	.WithCache()
+	.Build()
+#if RELEASE
+	.ApplyEncryption()
+#endif
+```
+
+Then, when loading settings, each property attributed with the `EncryptAttribute` will be decrypted if necessary. The `EncryptSettingsManager` will automatically detect, if the properties value needs to be decrypted or not. This is useful during development. For example the above mentioned connection string could still be plain text in its settings file, even if the corresponding property is attributed with the `EncryptAttribute`. When accessing the property from code, it will be readable either way.
+
+<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ff0000; background-color: #ff000020' >
+	<span style='margin-left:1em; text-align:left'>
+    	<b>Warning</b>
+    </span>
+    <br>
+	<div style='margin-left:1em; margin-right:1em;'>
+		Encryption is automatically applied when a settings instance is <b>loaded</b>. This means, that loading will encrypt the underlying settings file. It is therefore recommended to only use encryption in release build like shown in the above example.
+    </div>
+</div>
+
+___
 
 # Authors
 

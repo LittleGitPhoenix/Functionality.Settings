@@ -65,7 +65,9 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 		/// <inheritdoc />
 		public override void Write(Utf8JsonWriter writer, FileInfo value, JsonSerializerOptions options)
 		{
-			writer.WriteStringValue(value.FullName);
+			var parentDirectory = value.Directory;
+			var path = parentDirectory is not null ? Path.Combine(parentDirectory.GetRelativePath(), value.Name) : value.FullName;
+			writer.WriteStringValue(path);
 		}
 	}
 
@@ -90,7 +92,42 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 		/// <inheritdoc />
 		public override void Write(Utf8JsonWriter writer, DirectoryInfo value, JsonSerializerOptions options)
 		{
-			writer.WriteStringValue(value.FullName);
+			var path = value.GetRelativePath();
+			writer.WriteStringValue(path);
+		}
+	}
+
+	internal static class FileSystemInfoHelper
+	{
+		internal static string GetRelativePath(this FileSystemInfo info)
+		{
+			var path = info.FullName;
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
+			var relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), path);
+#else
+			//! Older framework version will not be supported. They get absolute path no matter what.
+			var relativePath = path;
+#endif
+			if (relativePath.GetOccurrenceCount("..") >= 3) return path;
+			return relativePath;
+		}
+
+		internal static uint GetOccurrenceCount(this string value, string search, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		{
+			var count = (uint) 0;
+			var searchLength = search.Length;
+			var valueLength = value.Length;
+			for (var index = 0; index < value.Length; index++)
+			{
+				var part = index + searchLength > valueLength ? value.Substring(index): value.Substring(index, searchLength);
+				if (search.Equals(part, comparison))
+				{
+					// With each found match set the index to the end of the match.
+					index += searchLength - 1; //! minus one because the index is automatically increased each turn.
+					count++;
+				}
+			}
+			return count;
 		}
 	}
 }

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
+using Phoenix.Functionality.Settings;
 using Phoenix.Functionality.Settings.Cache;
 
-namespace Phoenix.Functionality.Settings.Test
+namespace Settings.Test
 {
-	[TestClass]
 	public class CacheTest
 	{
 		#region Data
@@ -21,7 +21,7 @@ namespace Phoenix.Functionality.Settings.Test
 
 		#region Load Settings
 
-		[TestMethod]
+		[Test]
 		public void Load_From_Strong_Cache()
 		{
 			var cache = new SettingsCache();
@@ -43,7 +43,7 @@ namespace Phoenix.Functionality.Settings.Test
 			Assert.AreEqual(1, factoryExecutionCount);
 		}
 
-		[TestMethod]
+		[Test]
 		public async Task Load_From_Weak_Cache()
 		{
 			var cache = new WeakSettingsCache();
@@ -75,7 +75,7 @@ namespace Phoenix.Functionality.Settings.Test
 			Assert.AreEqual(2, factoryExecutionCount);
 		}
 
-		[TestMethod]
+		[Test]
 		public void Load_From_No_Cache()
 		{
 			var cache = new NoSettingsCache();
@@ -120,15 +120,15 @@ namespace Phoenix.Functionality.Settings.Test
 
 		#region Load Different Settings
 
-		[TestMethod]
+		[Test]
 		public void Load_Different_Settings_From_Strong_Cache()
 			=> this.Load_Different_Settings(new SettingsCache());
 
-		[TestMethod]
+		[Test]
 		public void Load_Different_Settings_From_Weak_Cache()
 			=> this.Load_Different_Settings(new WeakSettingsCache());
 		
-		[TestMethod]
+		[Test]
 		public void Load_Different_Settings_From_No_Cache()
 			=> this.Load_Different_Settings(new NoSettingsCache());
 
@@ -159,21 +159,21 @@ namespace Phoenix.Functionality.Settings.Test
 
 		#region Get All Settings
 
-		[TestMethod]
+		[Test]
 		public void Check_Get_All_Settings_From_Strong_Cache()
 		{
 			var settings = this.Load_All_Settings(new SettingsCache());
 			Assert.AreEqual(3, settings.Count);
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_Get_All_Settings_From_Weak_Cache()
 		{
 			var settings = this.Load_All_Settings(new WeakSettingsCache());
 			Assert.AreEqual(3, settings.Count);
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_Get_All_Settings_No_Cache()
 		{
 			var settings = this.Load_All_Settings(new NoSettingsCache());

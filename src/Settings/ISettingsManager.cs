@@ -17,10 +17,6 @@ namespace Phoenix.Functionality.Settings
 		#endregion
 
 		#region Properties
-
-		/// <summary> <see cref="ISettingsCache"/> used to store all loaded <see cref="ISettings"/> instances. </summary>
-		ISettingsCache Cache { get; }
-
 		#endregion
 
 		#region Methods

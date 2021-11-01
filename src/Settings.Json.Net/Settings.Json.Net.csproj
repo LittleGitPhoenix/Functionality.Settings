@@ -1,28 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
 		<AssemblyName>Phoenix.Functionality.Settings.Json.Net</AssemblyName>
 		<RootNamespace>Phoenix.Functionality.Settings.Json.Net</RootNamespace>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<IncludeSymbols>true</IncludeSymbols>
-		<Version>1.1.0</Version>
+		<Version>2.0.0</Version>
 		<Authors>Felix Leistner</Authors>
-		<Company>PhoenixLittle</Company>
-		<Copyright>2020</Copyright>
+		<Company>Little Phoenix</Company>
+		<Copyright>2021</Copyright>
 		<Description>JSON based implementation for the common settings infastructure using JsonSerializer.</Description>
 		<PackageId>Phoenix.Functionality.Settings.Json.Net</PackageId>
 		<Product>Phoenix.Functionality.Settings.Json</Product>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<IncludeSymbols>true</IncludeSymbols>
 		<PackageIcon>nuget.png</PackageIcon>
-		<PackageReadmeFile>readme.md</PackageReadmeFile>
-		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageIconUrl>https://www.little-phoenix.de/nuget/nuget.ico</PackageIconUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="System.Text.Json" Version="4.7.0" />
+		<PackageReference Include="System.Text.Json" Version="5.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -30,9 +32,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\..\..\nuget.png" Pack="true" PackagePath="" />
-		<None Include="..\..\README.md" Pack="true" PackagePath="" />
-		<None Include="..\..\LICENSE.md" Pack="true" PackagePath="" />
+		<None Include="..\..\nuget.png" Pack="true" PackagePath="" Link="⬙\nuget.png" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="" Link="⬙\README.md" />
+		<None Include="..\..\LICENSE.md" Pack="true" PackagePath="" Link="⬙\LICENSE.md" />
+		<None Include="..\..\COPYING" Pack="true" PackagePath="" Link="⬙\COPYING" />
+		<None Include="..\..\COPYING.LESSER" Pack="true" PackagePath="" Link="⬙\COPYING.LESSER" />
 	</ItemGroup>
+
+	<!-- Move the created NuGet packages into another folder. -->
+	<Target Name="MovePackage" AfterTargets="Pack">
+		<Move SourceFiles="$(BaseOutputPath)$(Configuration)\$(PackageId).$(PackageVersion).symbols.nupkg" DestinationFiles="$(BaseOutputPath)$(Configuration)\..\..\..\..\.nuget\$(PackageId).$(PackageVersion).nupkg" />
+		<Delete Files="$(BaseOutputPath)$(Configuration)\$(PackageId).$(PackageVersion).nupkg" />
+	</Target>
 
 </Project>

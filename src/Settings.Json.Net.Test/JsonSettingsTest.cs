@@ -4,12 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
+using Phoenix.Functionality.Settings;
 using Phoenix.Functionality.Settings.Json.Net;
 
-namespace Phoenix.Functionality.Settings.Json.Test
+namespace Settings.Json.Net.Test
 {
-	[TestClass]
 	public class JsonSettingsTest
 	{
 		#region Data
@@ -86,7 +86,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 
 		#region Complex Tests
 		
-		[TestMethod]
+		[Test]
 		public void Load_Existing_Settings()
 		{
 			var settingsManager = new JsonSettingsManager();
@@ -105,7 +105,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			Assert.AreEqual(new Guid("5805324d-9ca0-44f7-aa74-8dbb3375c129"), settings.SecondNested.VeryNested.Guid);
 		}
 
-		[TestMethod]
+		[Test]
 		public void Change_And_Save_Settings()
 		{
 			FileInfo settingsFile = null;
@@ -122,14 +122,14 @@ namespace Phoenix.Functionality.Settings.Json.Test
 				Assert.IsTrue(settingsFile.Exists);
 
 				Assert.IsNotNull(settings);
-				Assert.AreEqual(default, settings.Numeric);
-				Assert.AreEqual(default, settings.Message);
-				Assert.AreEqual(default, settings.Enumeration);
-				Assert.AreEqual(default, settings.WaitTime.TotalMilliseconds);
-				Assert.AreEqual(default, settings.RegEx);
-				Assert.AreEqual(default, settings.Directory);
-				Assert.AreEqual(default, settings.SecondNested.Flag);
-				Assert.AreEqual(default, settings.SecondNested.VeryNested.Guid);
+				Assert.AreEqual(default(int), settings.Numeric);
+				Assert.AreEqual(default(string), settings.Message);
+				Assert.AreEqual(default(TestEnum), settings.Enumeration);
+				Assert.AreEqual(default(double), settings.WaitTime.TotalMilliseconds);
+				Assert.AreEqual(default(Regex), settings.RegEx);
+				Assert.AreEqual(default(DirectoryInfo), settings.Directory);
+				Assert.AreEqual(default(bool), settings.SecondNested.Flag);
+				Assert.AreEqual(default(Guid), settings.SecondNested.VeryNested.Guid);
 
 				var targetNumeric = 123;
 				var targetMessage = "Some message";
@@ -183,7 +183,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public string String { get; set; } = "Test";
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_String_Property() => this.CheckSettings<StringPropertySettings>
 		(
 			settings =>
@@ -206,7 +206,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public TestEnum Enumeration { get; set; } = TestEnum.Two;
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_Enum_Property() => this.CheckSettings<EnumPropertySettings>
 		(
 			settings =>
@@ -229,7 +229,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public Guid Guid { get; set; } = Guid.NewGuid();
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_Guid_Property() => this.CheckSettings<GuidPropertySettings>
 		(
 			settings =>
@@ -252,7 +252,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public TimeSpan WaitTime { get; set; } = TimeSpan.FromMilliseconds(5000);
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_TimeSpan_Property() => this.CheckSettings<TimeSpanPropertySettings>
 			(
 				settings =>
@@ -275,7 +275,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public IPAddress Ip { get; set; } = IPAddress.Broadcast;
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_IPAddress_Property() => this.CheckSettings<IpAddressPropertySettings>
 			(
 				settings =>
@@ -298,7 +298,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public Regex RegularExpression { get; set; } = new Regex(@".*?");
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_Regex_Property() => this.CheckSettings<RegexPropertySettings>
 		(
 			settings =>
@@ -326,7 +326,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public FileInfo File { get; set; } = new FileInfo(@"C:\not_existing_file");
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_FileInfo_Property() => this.CheckSettings<FileInfoPropertySettings>
 		(
 			settings =>
@@ -349,7 +349,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public DirectoryInfo Directory { get; set; } = new DirectoryInfo(@"C:\not_existing_folder");
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_DirectoryInfo_Property() => this.CheckSettings<DirectoryInfoPropertySettings>
 		(
 			settings =>
@@ -371,7 +371,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public Guid[] Array { get; set; } = new Guid[] { Guid.NewGuid(), Guid.NewGuid() };
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_Array_Property() => this.CheckSettings<ArrayPropertySettings>
 		(
 			settings =>
@@ -395,7 +395,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public List<Guid> List { get; set; } = new List<Guid>() { Guid.NewGuid(), Guid.NewGuid() };
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_List_Property() => this.CheckSettings<ListPropertySettings>
 		(
 			settings =>
@@ -421,7 +421,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public Dictionary<string, string> Dictionary { get; set; } = new Dictionary<string, string>() { { "First", Guid.NewGuid().ToString() } };
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_StringPrimitiveDictionaryDictionary_Property() => this.CheckSettings<StringPrimitiveDictionaryPropertySettings>
 		(
 			settings =>
@@ -445,8 +445,8 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public Dictionary<int, string> Dictionary { get; set; } = new Dictionary<int, string>() { { int.MinValue, Guid.NewGuid().ToString() } };
 		}
 
-		[Ignore("Currently this is not supported by JsonSerializer: https://github.com/dotnet/corefx/issues/36024, https://github.com/dotnet/corefx/issues/37077")]
-		[TestMethod]
+		//[Ignore("Currently this is not supported by JsonSerializer: https://github.com/dotnet/corefx/issues/36024, https://github.com/dotnet/corefx/issues/37077")]
+		[Test]
 		public void Check_NonStringPrimitivePrimitiveDictionary_Property() => this.CheckSettings<PrimitivePrimitiveDictionaryPropertySettings>
 			(
 				settings =>
@@ -496,7 +496,7 @@ namespace Phoenix.Functionality.Settings.Json.Test
 			public Guid Guid { get; set; }
 		}
 
-		[TestMethod]
+		[Test]
 		public void Check_Nested_Property()
 		{
 			var settingsFile = this.GetSettingsFile<NestedPropertySettings>();
