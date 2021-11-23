@@ -4,17 +4,9 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Phoenix.Functionality.Settings.Cache;
@@ -87,7 +79,7 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		/// </summary>
 		/// <param name="baseDirectory"> The directory where all setting files reside. </param>
 		/// <param name="cache"> An <see cref="ISettingsCache"/> used for caching all loaded settings instances. If this is <c>Null</c> then <see cref="NoSettingsCache"/> will be used. </param>
-		public JsonSettingsManager(DirectoryInfo baseDirectory, ISettingsCache cache)
+		public JsonSettingsManager(DirectoryInfo? baseDirectory, ISettingsCache? cache)
 		{
 			// Save parameters.
 			_baseDirectory = baseDirectory ?? new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), ".settings"));
@@ -167,7 +159,16 @@ namespace Phoenix.Functionality.Settings.Json.Net
 				{
 					// YES: Deserialize it.
 					origin = SettingsOrigin.File;
-					settings = JsonSettingsManager.Deserialize<TSettings>(settingsFile);
+					var deserializedSettings = JsonSettingsManager.Deserialize<TSettings>(settingsFile);
+					if (deserializedSettings is null)
+					{
+						origin = SettingsOrigin.Default;
+						settings = JsonSettingsManager.GetDefaultInstance<TSettings>();
+					}
+					else
+					{
+						settings = deserializedSettings;
+					}
 				}
 
 				// Update the cache if needed.
@@ -182,17 +183,15 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		/// </summary>
 		/// <param name="settingsFile"> The settings file to deserialize. </param>
 		/// <returns> The deserialized settings object. </returns>
-		private static TSettings Deserialize<TSettings>(FileInfo settingsFile) where TSettings : class, ISettings, new()
+		private static TSettings? Deserialize<TSettings>(FileInfo settingsFile) where TSettings : class, ISettings, new()
 		{
 			if (settingsFile == null) throw new ArgumentNullException(nameof(settingsFile));
 			if (!settingsFile.Exists) throw new ArgumentException($"The settings file '{settingsFile.FullName}' does not exist.", nameof(settingsFile));
-			
-			using (var stream = settingsFile.Open(FileMode.Open, FileAccess.Read))
-			{
-				// Directly deserialize the file into an instance of TSettings.
-				//? What about error handling for (partially) invalid json?
-				return JsonSerializer.DeserializeAsync<TSettings>(stream, JsonOptions.Instance, CancellationToken.None).Result;
-			}
+
+			// Directly deserialize the file into an instance of TSettings.
+			//? What about error handling for (partially) invalid json?
+			using var stream = settingsFile.Open(FileMode.Open, FileAccess.Read);
+			return JsonSerializer.DeserializeAsync<TSettings>(stream, JsonOptions.Instance, CancellationToken.None).Result;
 		}
 
 		/// <summary>
@@ -203,15 +202,15 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		/// <returns> <c>True</c> if they match, otherwise <c>False</c>. </returns>
 		public static async Task<bool> ShouldSettingsFileBeUpdatedAsync(FileInfo settingsFile, object settings)
 		{
-			var targetJsonDocument = JsonDocument.Parse(await JsonSettingsManager.SerializeAsync(settings));
-			var targetData = await JsonSettingsManager.ConvertJsonDocumentToData(targetJsonDocument);
+			var targetJsonDocument = JsonDocument.Parse(await JsonSettingsManager.SerializeAsync(settings).ConfigureAwait(false));
+			var targetData = await JsonSettingsManager.ConvertJsonDocumentToData(targetJsonDocument).ConfigureAwait(false);
 
 #if NETSTANDARD2_0 || NETSTANDARD1_6 || NETSTANDARD1_5 || NETSTANDARD1_4 || NETSTANDARD1_3 || NETSTANDARD1_2 || NETSTANDARD1_1 || NETSTANDARD1_0
 			var actualJsonDocument = JsonDocument.Parse(File.ReadAllText(settingsFile.FullName));
 #else
-			var actualJsonDocument = JsonDocument.Parse(await File.ReadAllTextAsync(settingsFile.FullName));
+			var actualJsonDocument = JsonDocument.Parse(await File.ReadAllTextAsync(settingsFile.FullName).ConfigureAwait(false));
 #endif
-			var actualData = await JsonSettingsManager.ConvertJsonDocumentToData(actualJsonDocument);
+			var actualData = await JsonSettingsManager.ConvertJsonDocumentToData(actualJsonDocument).ConfigureAwait(false);
 
 			var areEqual = targetData.SequenceEqual(actualData);
 			return !areEqual;
@@ -219,23 +218,25 @@ namespace Phoenix.Functionality.Settings.Json.Net
 
 		private static async Task<byte[]> ConvertJsonDocumentToData(JsonDocument document)
 		{
-			using (var stream = new MemoryStream())
+#if NETSTANDARD2_0 || NETSTANDARD1_6 || NETSTANDARD1_5 || NETSTANDARD1_4 || NETSTANDARD1_3 || NETSTANDARD1_2 || NETSTANDARD1_1 || NETSTANDARD1_0
+			using var stream = new MemoryStream();
+#else
+			await using var stream = new MemoryStream();
+#endif
+			await using (var writer = new Utf8JsonWriter(stream))
 			{
-				using (var writer = new Utf8JsonWriter(stream))
-				{
-					document.RootElement.WriteTo(writer);
-					//document.RootElement.WriteValue(writer); //.Net Core 3.0
-					await writer.FlushAsync();
-				}
-				
-				stream.Seek(0, SeekOrigin.Begin);
-				return stream.ToArray();
+				document.RootElement.WriteTo(writer);
+				//document.RootElement.WriteValue(writer); //.Net Core 3.0
+				await writer.FlushAsync().ConfigureAwait(false);
 			}
+				
+			stream.Seek(0, SeekOrigin.Begin);
+			return stream.ToArray();
 		}
 		
-		#endregion
+#endregion
 
-		#region Save
+#region Save
 
 		/// <inheritdoc />
 		public void Save<TSettings>(TSettings settings, bool createBackup = default) where TSettings : ISettings
@@ -273,13 +274,11 @@ namespace Phoenix.Functionality.Settings.Json.Net
 			}
 
 			// Check if the directory of the file exists. Trying to create a file, whose directory is also not existing, will throw an exception.
-			if (!settingsFile.Directory.Exists) settingsFile.Directory.Create();
+			if (!settingsFile.Directory!.Exists) settingsFile.Directory.Create();
 
-			using (var fileStream = settingsFile.Open(FileMode.Create))
-			{
-				var jsonData = System.Text.Encoding.UTF8.GetBytes(jsonString);
-				fileStream.Write(jsonData, offset: 0, count: jsonData.Length);
-			}
+			using var fileStream = settingsFile.Open(FileMode.Create);
+			var jsonData = System.Text.Encoding.UTF8.GetBytes(jsonString);
+			fileStream.Write(jsonData, offset: 0, count: jsonData.Length);
 		}
 
 		/// <summary>
@@ -303,7 +302,7 @@ namespace Phoenix.Functionality.Settings.Json.Net
 			if (settingsFile.Exists)
 			{
 				// Create a backup of the current file.
-				var backupFolder = Path.Combine(settingsFile.DirectoryName, ".backup");
+				var backupFolder = Path.Combine(settingsFile.DirectoryName!, ".backup");
 				var backupFile = $"{Path.GetFileNameWithoutExtension(settingsFile.Name)}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}{settingsFile.Extension}";
 
 				Directory.CreateDirectory(backupFolder);
@@ -311,9 +310,9 @@ namespace Phoenix.Functionality.Settings.Json.Net
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Helper
+#region Helper
 		
 		/// <summary>
 		/// Creates a default settings instance.
@@ -346,8 +345,8 @@ namespace Phoenix.Functionality.Settings.Json.Net
 			return new FileInfo(Path.Combine(settingsDirectory.FullName, fileName));
 		}
 		
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 	}
 }

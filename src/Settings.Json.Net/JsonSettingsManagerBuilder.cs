@@ -81,9 +81,9 @@ namespace Phoenix.Functionality.Settings.Json.Net
 
 		#region Fields
 
-		private DirectoryInfo _settingsDirectory;
+		private DirectoryInfo? _settingsDirectory;
 
-		private ISettingsCache _cache;
+		private ISettingsCache? _cache;
 
 		#endregion
 

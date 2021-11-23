@@ -52,13 +52,15 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 		/// <inheritdoc />
 		public override FileInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
+			var value = reader.GetString();
 			try
 			{
-				return new FileInfo(reader.GetString());
+				if (value is null) throw new NotSupportedException();
+				return new FileInfo(value);
 			}
 			catch (Exception)
 			{
-				throw new JsonException($"Cannot convert the value '{(reader.GetString() ?? "[NULL]")}' of type {reader.TokenType} into a {nameof(FileInfo)}.");
+				throw new JsonException($"Cannot convert the value '{value ?? "[NULL]"}' of type {reader.TokenType} into a {nameof(FileInfo)}.");
 			}
 		}
 
@@ -79,13 +81,15 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 		/// <inheritdoc />
 		public override DirectoryInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
+			var value = reader.GetString();
 			try
 			{
-				return new DirectoryInfo(reader.GetString());
+				if (value is null) throw new NotSupportedException();
+				return new DirectoryInfo(value);
 			}
 			catch (Exception)
 			{
-				throw new JsonException($"Cannot convert the value '{(reader.GetString() ?? "[NULL]")}' of type {reader.TokenType} into a {nameof(DirectoryInfo)}.");
+				throw new JsonException($"Cannot convert the value '{value ?? "[NULL]"}' of type {reader.TokenType} into a {nameof(DirectoryInfo)}.");
 			}
 		}
 

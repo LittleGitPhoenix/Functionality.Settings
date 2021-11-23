@@ -18,7 +18,8 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 		/// <inheritdoc />
 		public override Regex Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			return new Regex(reader.GetString(), RegexOptions.IgnoreCase | RegexOptions.Compiled);
+			var value = reader.GetString() ?? ".*";
+			return new Regex(value, RegexOptions.IgnoreCase | RegexOptions.Compiled);
 		}
 
 		/// <inheritdoc />
