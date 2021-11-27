@@ -78,6 +78,16 @@ The **Phoenix.Functionality.Settings.Json.Net** provides special converters that
 
 ## Json.Newtonsoft
 
+<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ff0000; background-color: #ff000020' >
+	<span style='margin-left:1em; text-align:left'>
+    	<b>Deprecated</b>
+    </span>
+    <br>
+	<div style='margin-left:1em; margin-right:1em;'>
+		This <i>ISettingsManager</i> has been deprecated. All of the required functionality that <b>Newtonsoft.Json</b> provides is now available from the <b>.NET</b> build in <b>System.Text.Json</b> class. So <b>Phoenix.Functionality.Settings.Json.Net</b> can be used as a drop-in replacement.
+    </div>
+</div>
+
 | .NET Framework | .NET Standard | .NET Core |
 | :-: | :-: | :-: |
 | :heavy_check_mark: 4.6.1 | :heavy_check_mark: 2.0 | :heavy_check_mark: 2.0 |

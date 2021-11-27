@@ -39,14 +39,14 @@ namespace Settings.Encryption.Test
 		public void Check_Encryption_Yields_Different_Results()
 		{
 			// Arrange
-			var unencrypted = "unencrypted";
+			var unencrypted = "unencrypted_unencrypted_unencrypted_unencrypted_unencrypted_unencrypted_unencrypted"; //! Make this string a little bit longer, so that the random position of the encryption marker is not the same for both encryption attems.
 
 			// Act
 			var encrypted1 = EncryptionHelper.Encrypt(unencrypted);
 			var encrypted2 = EncryptionHelper.Encrypt(unencrypted);
 
 			// Assert
-			Assert.AreNotEqual(encrypted1, encrypted2);
+			Assert.AreNotEqual(encrypted1, encrypted2, "This check may fail, if the random position of the encryption marker is accidentally the same for both independent encryption attempts.");
 		}
 
 		[Test]

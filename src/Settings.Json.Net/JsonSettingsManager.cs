@@ -34,6 +34,9 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		/// <remarks> By default this is a folder named '.settings' in the <see cref="Directory.GetCurrentDirectory"/>. </remarks>
 		private readonly DirectoryInfo _baseDirectory;
 
+		/// <summary> The <see cref="JsonSerializerOptions"/> used by this manager. </summary>
+		private readonly JsonSerializerOptions _jsonSerializerOptions;
+
 		#endregion
 
 		#region Properties
@@ -55,12 +58,7 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		#endregion
 
 		#region (De)Constructors
-
-		//static JsonSettingsManager()
-		//{
-		//	TypeValueConverter = new TypeValueConverter();
-		//}
-
+		
 		/// <summary>
 		/// Constructor
 		/// </summary>
@@ -87,6 +85,7 @@ namespace Phoenix.Functionality.Settings.Json.Net
 
 			// Initialize fields.
 			_lock = new object();
+			_jsonSerializerOptions = JsonOptionProvider.GetOptions(_baseDirectory);
 
 			// Create the settings base folder.
 			_baseDirectory.Create();
@@ -121,12 +120,12 @@ namespace Phoenix.Functionality.Settings.Json.Net
 				// If the settings are the default instance, then save those to a file if necessary and return it.
 				if (origin == SettingsOrigin.Default)
 				{
-					if (!preventUpdate) JsonSettingsManager.Save(settings, settingsFile);
+					if (!preventUpdate) JsonSettingsManager.Save(settings, settingsFile, _jsonSerializerOptions);
 					return settings;
 				}
 
 				// Save the changed settings if necessary.
-				if (!preventUpdate && JsonSettingsManager.ShouldSettingsFileBeUpdatedAsync(settingsFile, settings).Result) this.Save(settings, createBackup: true);
+				if (!preventUpdate && JsonSettingsManager.ShouldSettingsFileBeUpdatedAsync(settingsFile, settings, _jsonSerializerOptions).Result) this.Save(settings, createBackup: true);
 
 				// Setup usage of the special extension methods.
 				settings.InitializeExtensionMethods(this);
@@ -159,7 +158,7 @@ namespace Phoenix.Functionality.Settings.Json.Net
 				{
 					// YES: Deserialize it.
 					origin = SettingsOrigin.File;
-					var deserializedSettings = JsonSettingsManager.Deserialize<TSettings>(settingsFile);
+					var deserializedSettings = JsonSettingsManager.Deserialize<TSettings>(settingsFile, _jsonSerializerOptions);
 					if (deserializedSettings is null)
 					{
 						origin = SettingsOrigin.Default;
@@ -182,8 +181,9 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		/// Deserializes the given file into an <see cref="System.Dynamic.ExpandoObject"/>.
 		/// </summary>
 		/// <param name="settingsFile"> The settings file to deserialize. </param>
+		/// <param name="jsonSerializerOptions"> The <see cref="JsonSerializerOptions"/> used for deserialization. </param>
 		/// <returns> The deserialized settings object. </returns>
-		private static TSettings? Deserialize<TSettings>(FileInfo settingsFile) where TSettings : class, ISettings, new()
+		private static TSettings? Deserialize<TSettings>(FileInfo settingsFile, JsonSerializerOptions jsonSerializerOptions) where TSettings : class, ISettings, new()
 		{
 			if (settingsFile == null) throw new ArgumentNullException(nameof(settingsFile));
 			if (!settingsFile.Exists) throw new ArgumentException($"The settings file '{settingsFile.FullName}' does not exist.", nameof(settingsFile));
@@ -191,7 +191,7 @@ namespace Phoenix.Functionality.Settings.Json.Net
 			// Directly deserialize the file into an instance of TSettings.
 			//? What about error handling for (partially) invalid json?
 			using var stream = settingsFile.Open(FileMode.Open, FileAccess.Read);
-			return JsonSerializer.DeserializeAsync<TSettings>(stream, JsonOptions.Instance, CancellationToken.None).Result;
+			return JsonSerializer.DeserializeAsync<TSettings>(stream, jsonSerializerOptions, CancellationToken.None).Result;
 		}
 
 		/// <summary>
@@ -199,10 +199,11 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		/// </summary>
 		/// <param name="settingsFile"> The underlying settings file. </param>
 		/// <param name="settings"> The deserialized settings instance. </param>
+		/// <param name="jsonSerializerOptions"> The <see cref="JsonSerializerOptions"/> used for (de)serialization. </param>
 		/// <returns> <c>True</c> if they match, otherwise <c>False</c>. </returns>
-		public static async Task<bool> ShouldSettingsFileBeUpdatedAsync(FileInfo settingsFile, object settings)
+		internal static async Task<bool> ShouldSettingsFileBeUpdatedAsync(FileInfo settingsFile, object settings, JsonSerializerOptions jsonSerializerOptions)
 		{
-			var targetJsonDocument = JsonDocument.Parse(await JsonSettingsManager.SerializeAsync(settings).ConfigureAwait(false));
+			var targetJsonDocument = JsonDocument.Parse(await JsonSettingsManager.SerializeAsync(settings, jsonSerializerOptions).ConfigureAwait(false));
 			var targetData = await JsonSettingsManager.ConvertJsonDocumentToData(targetJsonDocument).ConfigureAwait(false);
 
 #if NETSTANDARD2_0 || NETSTANDARD1_6 || NETSTANDARD1_5 || NETSTANDARD1_4 || NETSTANDARD1_3 || NETSTANDARD1_2 || NETSTANDARD1_1 || NETSTANDARD1_0
@@ -243,17 +244,17 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		{
 			lock (_lock)
 			{
-				JsonSettingsManager.Save(settings, this.GetSettingsFile<TSettings>(), createBackup);
+				JsonSettingsManager.Save(settings, this.GetSettingsFile<TSettings>(), _jsonSerializerOptions, createBackup);
 			}
 		}
 
-		private static void Save<TSettings>(TSettings settings, FileInfo settingsFile, bool createBackup = default) where TSettings : ISettings
+		private static void Save<TSettings>(TSettings settings, FileInfo settingsFile, JsonSerializerOptions jsonSerializerOptions, bool createBackup = default) where TSettings : ISettings
 		{
 			// Create a backup.
 			if (createBackup) JsonSettingsManager.CreateBackup(settingsFile);
 			
 			// Serialize the settings instance into a json string.
-			var jsonString = JsonSettingsManager.SerializeAsync(settings).Result;
+			var jsonString = JsonSettingsManager.SerializeAsync(settings, jsonSerializerOptions).Result;
 
 			// Save the json string to file.
 			JsonSettingsManager.Save(jsonString, settingsFile);
@@ -285,11 +286,12 @@ namespace Phoenix.Functionality.Settings.Json.Net
 		/// Serializes the <paramref name="settings"/> instance into a json string.
 		/// </summary>
 		/// <param name="settings"> The concrete settings instance. </param>
+		/// <param name="jsonSerializerOptions"> The <see cref="JsonSerializerOptions"/> used for serialization. </param>
 		/// <returns> The serialized json string or <c>NULL</c>. </returns>
-		private static Task<string> SerializeAsync(object settings)
+		private static Task<string> SerializeAsync(object settings, JsonSerializerOptions jsonSerializerOptions)
 		{
 			// Serialize the given json type back to a string.
-			return Task.FromResult(JsonSerializer.Serialize(settings, JsonOptions.Instance));
+			return Task.FromResult(JsonSerializer.Serialize(settings, jsonSerializerOptions));
 		}
 
 		/// <summary>

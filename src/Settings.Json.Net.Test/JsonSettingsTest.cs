@@ -652,7 +652,8 @@ namespace Settings.Json.Net.Test
 		
 		private void CompareSettingsFileToInstance<TSettings>(FileInfo settingsFile, TSettings settings) where TSettings : class, ISettings, new()
 		{
-			var areIdentical = !JsonSettingsManager.ShouldSettingsFileBeUpdatedAsync(settingsFile, settings).Result;
+			var jsonSerializerOptions = JsonOptionProvider.GetOptions(settingsFile.Directory);
+			var areIdentical = !JsonSettingsManager.ShouldSettingsFileBeUpdatedAsync(settingsFile, settings, jsonSerializerOptions).Result;
 			Assert.IsTrue(areIdentical);
 		}
 

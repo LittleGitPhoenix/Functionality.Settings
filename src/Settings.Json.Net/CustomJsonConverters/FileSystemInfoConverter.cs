@@ -43,12 +43,23 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 	//		writer.WriteStringValue(value.FullName);
 	//	}
 	//}
-
+	
 	/// <summary>
 	/// Custom json converter for <see cref="FileInfo"/>.
 	/// </summary>
 	public class FileInfoConverter : JsonConverter<FileInfo>
 	{
+		private readonly DirectoryInfo? _baseDirectory;
+
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		/// <param name="baseDirectory"> Optional base directory used to determine relative path. </param>
+		public FileInfoConverter(DirectoryInfo? baseDirectory = null)
+		{
+			_baseDirectory = baseDirectory;
+		}
+
 		/// <inheritdoc />
 		public override FileInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
@@ -56,7 +67,7 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 			try
 			{
 				if (value is null) throw new NotSupportedException();
-				return new FileInfo(value);
+				return new FileInfo(Path.Combine(_baseDirectory?.FullName ?? String.Empty, value));
 			}
 			catch (Exception)
 			{
@@ -68,7 +79,7 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 		public override void Write(Utf8JsonWriter writer, FileInfo value, JsonSerializerOptions options)
 		{
 			var parentDirectory = value.Directory;
-			var path = parentDirectory is not null ? Path.Combine(parentDirectory.GetRelativePath(), value.Name) : value.FullName;
+			var path = parentDirectory is not null ? Path.Combine(parentDirectory.GetRelativePath(_baseDirectory), value.Name) : value.FullName;
 			writer.WriteStringValue(path);
 		}
 	}
@@ -78,6 +89,17 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 	/// </summary>
 	public class DirectoryInfoConverter : JsonConverter<DirectoryInfo>
 	{
+		private readonly DirectoryInfo? _baseDirectory;
+
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		/// <param name="baseDirectory"> Optional base directory used to determine relative path. </param>
+		public DirectoryInfoConverter(DirectoryInfo? baseDirectory = null)
+		{
+			_baseDirectory = baseDirectory;
+		}
+
 		/// <inheritdoc />
 		public override DirectoryInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
@@ -85,7 +107,7 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 			try
 			{
 				if (value is null) throw new NotSupportedException();
-				return new DirectoryInfo(value);
+				return new DirectoryInfo(Path.Combine(_baseDirectory?.FullName ?? String.Empty, value));
 			}
 			catch (Exception)
 			{
@@ -96,23 +118,24 @@ namespace Phoenix.Functionality.Settings.Json.Net.CustomJsonConverters
 		/// <inheritdoc />
 		public override void Write(Utf8JsonWriter writer, DirectoryInfo value, JsonSerializerOptions options)
 		{
-			var path = value.GetRelativePath();
+			var path = value.GetRelativePath(_baseDirectory);
 			writer.WriteStringValue(path);
 		}
 	}
 
 	internal static class FileSystemInfoHelper
 	{
-		internal static string GetRelativePath(this FileSystemInfo info)
+		internal static string GetRelativePath(this FileSystemInfo info, DirectoryInfo? baseDirectory)
 		{
 			var path = info.FullName;
+			if (baseDirectory is null) return path;
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
-			var relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), path);
+			var relativePath = Path.GetRelativePath(baseDirectory.FullName, path);
 #else
 			//! Older framework version will not be supported. They get absolute path no matter what.
 			var relativePath = path;
 #endif
-			if (relativePath.GetOccurrenceCount("..") >= 3) return path;
+			if (relativePath.GetOccurrenceCount("..") >= 4) return path;
 			return relativePath;
 		}
 

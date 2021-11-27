@@ -57,8 +57,8 @@ namespace Settings.Json.Net.Test
 				WriteIndented = true,
 				Converters =
 				{
-					new FileInfoConverter(),
-					new DirectoryInfoConverter(),
+					new FileInfoConverter(new DirectoryInfo(Environment.CurrentDirectory)),
+					new DirectoryInfoConverter(new DirectoryInfo(Environment.CurrentDirectory)),
 				}
 			};
 			var file = new FileInfo(path);
@@ -92,13 +92,13 @@ namespace Settings.Json.Net.Test
 				WriteIndented = true,
 				Converters =
 				{
-					new FileInfoConverter(),
-					new DirectoryInfoConverter(),
+					new FileInfoConverter(new DirectoryInfo(Environment.CurrentDirectory)),
+					new DirectoryInfoConverter(new DirectoryInfo(Environment.CurrentDirectory)),
 				}
 			};
 			var directory = new DirectoryInfo(path);
 			var settingsString = $"{{\r\n  \"directory\": \"{path.Replace(@"\", @"\\")}\"\r\n}}";
-
+			
 			// Act
 			var deserializedSettings = JsonSerializer.Deserialize<DirectorySettings>(settingsString, jsonOptions);
 
@@ -110,7 +110,8 @@ namespace Settings.Json.Net.Test
 		[Test]
 		[TestCase(@"..\Test\some.file", true)]
 		[TestCase(@"..\..\Test\some.file", true)]
-		[TestCase(@"..\..\..\Test\some.file", false)]
+		[TestCase(@"..\..\..\Test\some.file", true)]
+		[TestCase(@"..\..\..\..\Test\some.file", false)]
 #endif
 		[TestCase(@"C:\some.file", false)]
 		[TestCase(@"C:\Test\some.file", false)]
@@ -128,8 +129,8 @@ namespace Settings.Json.Net.Test
 				WriteIndented = true,
 				Converters =
 				{
-					new FileInfoConverter(),
-					new DirectoryInfoConverter(),
+					new FileInfoConverter(new DirectoryInfo(Environment.CurrentDirectory)),
+					new DirectoryInfoConverter(new DirectoryInfo(Environment.CurrentDirectory)),
 				}
 			};
 			var file = new FileInfo(path);
@@ -148,7 +149,8 @@ namespace Settings.Json.Net.Test
 		[Test]
 		[TestCase(@"..\Test", true)]
 		[TestCase(@"..\..\Test", true)]
-		[TestCase(@"..\..\..\Test", false)]
+		[TestCase(@"..\..\..\Test", true)]
+		[TestCase(@"..\..\..\..\Test", false)]
 #endif
 		[TestCase(@"C:\", false)]
 		[TestCase(@"C:\Test", false)]
@@ -158,22 +160,22 @@ namespace Settings.Json.Net.Test
 			// Arrange
 			var jsonOptions = new JsonSerializerOptions()
 			{
-			   AllowTrailingCommas = true,
-			   IgnoreReadOnlyProperties = false,
-			   PropertyNameCaseInsensitive = true,
-			   PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-			   ReadCommentHandling = JsonCommentHandling.Skip,
-			   WriteIndented = true,
-			   Converters =
-			   {
-					new FileInfoConverter(),
-					new DirectoryInfoConverter(),
+				AllowTrailingCommas = true,
+				IgnoreReadOnlyProperties = false,
+				PropertyNameCaseInsensitive = true,
+				PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+				ReadCommentHandling = JsonCommentHandling.Skip,
+				WriteIndented = true,
+				Converters =
+				{
+					new FileInfoConverter(new DirectoryInfo(Environment.CurrentDirectory)),
+					new DirectoryInfoConverter(new DirectoryInfo(Environment.CurrentDirectory)),
 				}
 			};
 			var directory = new DirectoryInfo(path);
 			var target = mustBeRelativeAfterSave ? path : directory.FullName;
 			var settings = new DirectorySettings() { Directory =  directory};
-			
+
 			// Act
 			var settingsString = JsonSerializer.Serialize(settings, jsonOptions);
 
