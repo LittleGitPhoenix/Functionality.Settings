@@ -23,6 +23,8 @@ namespace Phoenix.Functionality.Settings.Encryption
 
 		private readonly ISettingsManager _underlyingSettingsManager;
 
+		private readonly EncryptionHelper _encryptionHelper;
+
 		#endregion
 
 		#region Properties
@@ -30,12 +32,19 @@ namespace Phoenix.Functionality.Settings.Encryption
 
 		#region (De)Constructors
 
-		public EncryptSettingsManager(ISettingsManager underlyingSettingsManager)
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		/// <param name="underlyingSettingsManager"> The <see cref="ISettingsManager"/> that will be used under the hood. </param>
+		/// <param name="key"> Optional secret key to use for the symmetric algorithm. </param>
+		/// <param name="vector"> Optional initialization vector to use for the symmetric algorithm. </param>
+		public EncryptSettingsManager(ISettingsManager underlyingSettingsManager, byte[]? key = null, byte[]? vector = null)
 		{
 			// Save parameters.
 			_underlyingSettingsManager = underlyingSettingsManager;
 
 			// Initialize fields.
+			_encryptionHelper = new EncryptionHelper(key, vector);
 		}
 
 		#endregion
@@ -73,17 +82,14 @@ namespace Phoenix.Functionality.Settings.Encryption
 		/// <returns> True if any properties attributed with <see cref="EncryptAttribute"/> are not encrypted. </returns>
 		internal bool DecryptProperties<TSettings>(TSettings settings)
 		{
-			//var hasAttributedProperties = false;
 			var allPropertiesAreEncrypted = true;
-			//var wasSomethingDecrypted = false;
 			var propertiesToDecrypt = this.GetRelevantProperties(settings);
-			foreach (var (property, containingObject, stringValue) in propertiesToDecrypt)
+			foreach (var (setter, stringValue, _) in propertiesToDecrypt)
 			{
 				if (String.IsNullOrWhiteSpace(stringValue)) continue;
-				//hasAttributedProperties = true;
-				var decryptedValue = EncryptionHelper.Decrypt(stringValue);
+				var decryptedValue = _encryptionHelper.Decrypt(stringValue);
 				allPropertiesAreEncrypted &= !stringValue.Equals(decryptedValue, StringComparison.OrdinalIgnoreCase);
-				if (stringValue != decryptedValue) property.SetValue(containingObject, decryptedValue);
+				if (stringValue != decryptedValue) setter.Invoke(decryptedValue);
 			}
 			return !allPropertiesAreEncrypted;
 		}
@@ -91,87 +97,235 @@ namespace Phoenix.Functionality.Settings.Encryption
 		internal void EncryptProperties<TSettings>(TSettings settings)
 		{
 			var propertiesToEncrypt = this.GetRelevantProperties(settings);
-			foreach (var (property, containingObject, stringValue) in propertiesToEncrypt)
+			foreach (var (setter, stringValue, _) in propertiesToEncrypt)
 			{
 				if (String.IsNullOrWhiteSpace(stringValue)) continue;
-				var encryptedValue = EncryptionHelper.Encrypt(stringValue);
-				if (stringValue != encryptedValue) property.SetValue(containingObject, encryptedValue);
+				var encryptedValue = _encryptionHelper.Encrypt(stringValue);
+				if (stringValue != encryptedValue) setter.Invoke(encryptedValue);
 			}
 		}
 
-		internal IReadOnlyCollection<(PropertyInfo Property, object ContainingObject, string? StringValue)> GetRelevantProperties<TSettings>(TSettings settings)
+		internal IReadOnlyCollection<(Action<object?> Setter, string? StringValue, string Name)> GetRelevantProperties<TSettings>(TSettings settings)
 			=> EncryptSettingsManager.GetRelevantProperties(settings).ToArray();
 
-		internal static IEnumerable<(PropertyInfo Property, object ContainingObject, string? StringValue)> GetRelevantProperties(object? @object, int depth = 0)
+		internal static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> GetRelevantProperties(object? @object, int depth = 0)
 		{
-			if (depth++ == 100) yield break;
-			if (@object is null) yield break;
-			
+			var indentation = new string('\t', depth);
+			if (depth >= 100)
+			{
+				Write($"{indentation}Maximum depth has been reached.");
+				yield break;
+			}
+			if (@object is null)
+			{
+				Write($"{indentation}The object is null and can therefore not be handled.");
+				yield break;
+			}
+
 			var type = @object.GetType();
 			var properties = type.GetProperties(BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-			
 			foreach (var propertyInfo in properties)
 			{
-				if (EncryptSettingsManager.IsRelevant(propertyInfo))
+				foreach (var tuple in CheckPropertyOfObject(@object, propertyInfo, depth))
 				{
-					var stringValue = propertyInfo.GetValue(@object)?.ToString();
-					yield return (propertyInfo, @object, stringValue);
-					continue;
+					yield return tuple;
 				}
+			}
+		}
 
-				//Console.WriteLine($"{propertyInfo.PropertyType}");
-				//Console.WriteLine($"\t{nameof(propertyInfo.PropertyType.IsPrimitive)}: {propertyInfo.PropertyType.IsPrimitive}");
-				//Console.WriteLine($"\t{nameof(propertyInfo.PropertyType.Module.ScopeName)}: {propertyInfo.PropertyType.Module.ScopeName}");
-				//Console.WriteLine($"\t{nameof(propertyInfo.PropertyType.Module.FullyQualifiedName)}: {propertyInfo.PropertyType.Module.FullyQualifiedName}");
+		internal static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> CheckPropertyOfObject(object @object, PropertyInfo propertyInfo, int depth, bool comesFromAttributedParent = false)
+		{
+			var propertyName = propertyInfo.Name;
+			var propertyType = propertyInfo.PropertyType;
+			var isAttributed = comesFromAttributedParent || IsAttributed(propertyInfo);
 
-				var nestedValue = propertyInfo.GetValue(@object);
-				if (EncryptSettingsManager.IsNested(propertyInfo))
+			var indentation = new string('\t', depth + 1);
+			Write($"{new string('\t', depth)}• {propertyName} ({propertyType}):");
+			//Write($"{indentation}{nameof(propertyType.IsPrimitive)}: {propertyType.IsPrimitive}");
+			Write($"{indentation}IsAttributed: {isAttributed}");
+			//Write($"{indentation}{nameof(propertyType.Module.ScopeName)}: {propertyType.Module.ScopeName}");
+			//Write($"{indentation}{nameof(propertyType.Module.FullyQualifiedName)}: {propertyType.Module.FullyQualifiedName}");
+
+			object? value;
+			try
+			{
+				value = propertyInfo.GetValue(@object);
+			}
+			catch (Exception ex)
+			{
+				Write($"{indentation}⇒ An error occurred while trying to get the value of the property.");
+				Write($"{indentation}⇒ {ex}");
+				yield break;
+			}
+
+			if (!isAttributed)
+			{
+				if (IsNested(propertyType))
 				{
-					foreach (var tuple in EncryptSettingsManager.GetRelevantProperties(nestedValue, depth))
+					Write($"{indentation}⇒ The property is nested. Its value will be inspected.");
+					foreach (var tuple in GetRelevantProperties(value, depth + 1))
 					{
 						yield return tuple;
 					}
+					yield break;
 				}
-				else if (EncryptSettingsManager.IsCollection(propertyInfo))
+
+				if (IsCollection(propertyType))
 				{
-					IEnumerable? enumerable = nestedValue as IEnumerable;
+					IEnumerable? enumerable = value as IEnumerable;
+					Write($"{indentation}⇒ The property is a collection. Its items will be inspected.");
 					foreach (var item in enumerable ?? Array.Empty<object>())
 					{
-						foreach (var tuple in EncryptSettingsManager.GetRelevantProperties(item, depth))
+						//TODO Check each item if it is either directly supported (string) or a nested type.
+						foreach (var tuple in GetRelevantProperties(item, depth + 1))
 						{
 							yield return tuple;
 						}
 					}
+					yield break;
+				}
+
+				Write($"{indentation}⇒ The property is not attributed and no nested or collection type.");
+				yield break;
+			}
+
+			if (IsSupported(propertyType))
+			{
+				Write($"{indentation}⇒ The property is attributed and of a supported type. It will be de-/encrypted.");
+
+				Action<object?> setter = (newValue) => propertyInfo.SetValue(@object, newValue);
+				var stringValue = value?.ToString();
+				yield return (setter, stringValue, propertyName);
+				yield break;
+			}
+
+			if (IsCollection(propertyType))
+			{
+				IList list = value as IList ?? Array.Empty<object>();
+				foreach (var tuple in HandleAttributedList(list, propertyName, depth))
+				{
+					yield return tuple;
+				}
+				yield break;
+			}
+
+			Write($"{indentation}⇒ The property is attributed but its type is not supported.");
+		}
+
+		internal static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> HandleAttributedList(IList list, string propertyName, int depth)
+		{
+			var indentation = new string('\t', depth + 1);
+			if (depth >= 100)
+			{
+				Write($"{indentation}Maximum depth has been reached.");
+				yield break;
+			}
+
+			if (!TryGetGenericListType(list.GetType(), out var genericType))
+			{
+				Write($"{indentation}⇒ The property is an attributed but non-generic list.");
+			}
+			else if (IsSupported(genericType))
+			{
+				// Prepare all values of the list for en-/decryption.
+				Write($"{indentation}⇒ The property is an attributed list consisting of supported types. Its {list.Count} item(s) will be de-/encrypted.");
+				for (var index = 0; index < list.Count; index++)
+				{
+					var localIndex = index;
+					Action<object?> setter = (newValue) => list[localIndex] = newValue;
+					yield return (setter, list[localIndex]?.ToString(), propertyName);
 				}
 			}
+			else if (IsCollection(genericType))
+			{
+				// This seems to be a nested collection. Execute a recursive call with the values.
+				Write($"{indentation}⇒ The property is an attributed but stacked list. Its {list.Count} item(s) will be inspected.");
+				foreach (var item in list)
+				{
+					IList nestedList = item as IList ?? Array.Empty<object>();
+					foreach (var tuple in HandleAttributedList(nestedList,propertyName, depth + 1))
+					{
+						yield return tuple;
+					}
+				}
+			}
+			else
+			{
+				Write($"{indentation}⇒ The property is an attributed list of an unsupported type '{genericType}'.");
+			}
 		}
-
-		private static bool IsRelevant(PropertyInfo propertyInfo)
+		
+		private static bool IsAttributed(PropertyInfo propertyInfo)
 		{
 			if (propertyInfo.GetCustomAttribute<EncryptAttribute>() is null) return false;
-			if (propertyInfo.PropertyType != typeof(string) && propertyInfo.PropertyType != typeof(object)) return false;
 			return true;
 		}
-
-		private static bool IsNested(PropertyInfo propertyInfo)
+		
+		private static bool IsSupported(Type propertyType)
 		{
-			if (propertyInfo.PropertyType.IsPrimitive) return false;
-			if (propertyInfo.PropertyType == typeof(string)) return false; //! Handle strings directly, because it will be one of the most commonly encountered types and it is also an IEnumerable, that shouldn't be enumerated.
+			if (propertyType != typeof(string) && propertyType != typeof(object)) return false;
+			return true;
+		}
+		
+		private static bool IsNested(Type type)
+		{
+			if (type == typeof(ISettings)) return true; //! Handle settings directly, as this is always the first object that will be checked.
+			
+			if (type.IsPrimitive) return false;
+			if (type == typeof(string)) return false; //! Handle strings directly, because it will be one of the most commonly encountered types and it is also an IEnumerable, that shouldn't be enumerated.
 
 			// This filters build-in types for .Net Framework.
-			if (propertyInfo.PropertyType.Module.ScopeName == "CommonLanguageRuntimeLibrary") return false;
+			if (type.Module.ScopeName == "CommonLanguageRuntimeLibrary") return false;
 
 			//TODO This should be improved.
 			// This filters build-in types for .Net.
-			if (propertyInfo.PropertyType.Module.ScopeName.StartsWith("System.") && propertyInfo.PropertyType.Module.FullyQualifiedName.Contains("dotnet")) return false;
+			if (type.Module.ScopeName.StartsWith("System.") && type.Module.FullyQualifiedName.Contains("dotnet")) return false;
 
 			return true;
 		}
 
-		private static bool IsCollection(PropertyInfo propertyInfo)
+		private static bool IsCollection(Type propertyType)
 		{
-			if (propertyInfo.PropertyType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(propertyInfo.PropertyType)) return true;
+			if (propertyType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(propertyType)) return true;
 			return false;
+		}
+
+#if NETSTANDARD2_0
+		private static bool TryGetGenericListType(Type propertyType, out Type? genericType)
+#else
+		private static bool TryGetGenericListType(Type propertyType, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Type? genericType)
+#endif
+		{
+			genericType = null;
+			
+			// Quick check if the type even is a list.
+			if (!typeof(IList).IsAssignableFrom(propertyType)) return false;
+			
+			// Array
+			if (propertyType.IsArray)
+			{
+				genericType = propertyType.GetElementType();
+			}
+			// Generic list
+			else if (propertyType.IsGenericType)
+			{
+				genericType = propertyType.GetGenericArguments().First();
+			}
+			// Inheritance
+			else
+			{
+				var interfaceType = propertyType.GetInterfaces().FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>));
+				genericType = interfaceType?.GetGenericArguments().First();
+			}
+
+			return  genericType is not null;
+		}
+
+		private static void Write(string message)
+		{
+#if DEBUG
+			//System.Console.WriteLine(message);
+#endif
 		}
 
 		#endregion

@@ -81,25 +81,67 @@ namespace Settings.Encryption.Test
 			public int Number { get; set; }
 		}
 
+		class ThrowingSettings : ISettings
+		{
+
+			internal Int64 Error => throw new Exception();
+		}
+
+		class SimpleArraySettings : ISettings
+		{
+			[Encrypt]
+			internal string[] Messages { get; set; } = new string[] { "1", "2" };
+		}
+
+		class SimpleListSettings : ISettings
+		{
+			[Encrypt]
+			internal List<string> Messages { get; set; } = new List<string>() { "1", "2" };
+		}
+
+		class StackedListSettings : ISettings
+		{
+			[Encrypt]
+			internal List<List<string>> StackedMessages { get; set; } = new List<List<string>>()
+			{
+				new List<string>(){"1.1", "1.2", "1.3"},
+				new List<string>(){"3.1", "2.2", "2.3"},
+			};
+		}
+
+		class NestedListSettings : ISettings
+		{
+			internal class EncryptedCollection : List<string>
+			{
+				public EncryptedCollection() : base(new List<string>() { "1", "2", "3" }) { }
+			}
+
+			[Encrypt]
+			internal EncryptedCollection NestedMessages { get; set; } = new EncryptedCollection();
+		}
+
 		#endregion
+
+		#region Property Detection
+
 
 		[Test]
 		public void Check_Relevant_Properties_Are_Filtered()
 		{
 			// Arrange
 			var settings = new MultiplePropertiesSettings();
-			
+
 			// Act
 			var properties = EncryptSettingsManager.GetRelevantProperties(settings).ToArray();
 
 			// Assert
 			Assert.That(properties, Has.Length.GreaterThanOrEqualTo(1));
-			Assert.IsNotNull(properties.FirstOrDefault(info => info.Property.Name == nameof(MultiplePropertiesSettings.PublicProperty)).Property);
-			Assert.IsNotNull(properties.FirstOrDefault(info => info.Property.Name == nameof(MultiplePropertiesSettings.ObjectProperty)).Property);
-			Assert.IsNotNull(properties.FirstOrDefault(info => info.Property.Name == "PrivateProperty").Property);
-			Assert.IsNotNull(properties.FirstOrDefault(info => info.Property.Name == nameof(MultiplePropertiesSettings.InternalProperty)).Property);
-			Assert.IsNull(properties.FirstOrDefault(info => info.Property.Name == nameof(MultiplePropertiesSettings.InvalidProperty)).Property);
-			Assert.IsNull(properties.FirstOrDefault(info => info.Property.Name == nameof(MultiplePropertiesSettings.IrrelevantProperty)).Property);
+			Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.PublicProperty)).Name); // '.Name' → Access some property, because the value tuple itself will always be available.
+			Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.ObjectProperty)).Name);
+			Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == "PrivateProperty").Name);
+			Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.InternalProperty)).Name);
+			Assert.IsNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.InvalidProperty)).Name);
+			Assert.IsNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.IrrelevantProperty)).Name);
 		}
 
 		[Test]
@@ -107,15 +149,57 @@ namespace Settings.Encryption.Test
 		{
 			// Arrange
 			var settings = new NestedSettings();
-			
+
 			// Act
 			var properties = EncryptSettingsManager.GetRelevantProperties(settings).ToArray();
 
 			// Assert
 			Assert.That(properties, Has.Length.EqualTo(3));
-			Assert.IsNotNull(properties.All(info => info.Property.Name == nameof(NestedSettings.InnerInstance.Message)));
+			Assert.IsNotNull(properties.All(info => info.Name == nameof(NestedSettings.InnerInstance.Message)));
 		}
 
+		[Test]
+		public void Check_Settings_With_Properties_That_Throw_Can_Be_Handled()
+		{
+			// Arrange
+			var settings = new ThrowingSettings();
+
+			// Act + Assert
+			Assert.DoesNotThrow(() => EncryptSettingsManager.GetRelevantProperties(settings).ToArray());
+		}
+
+		[Test]
+		[Category("Encrypted Collection Test")]
+		public void Check_Simple_Array_Handling() => this.CheckCollectionHandling<SimpleArraySettings>(2);
+
+		[Test]
+		[Category("Encrypted Collection Test")]
+		public void Check_Simple_List_Handling() => this.CheckCollectionHandling<SimpleListSettings>(2);
+
+		[Test]
+		[Category("Encrypted Collection Test")]
+		public void Check_Stacked_List_Handling() => this.CheckCollectionHandling<StackedListSettings>(6);
+
+		[Test]
+		[Category("Encrypted Collection Test")]
+		public void Check_Nested_List_Handling() => this.CheckCollectionHandling<NestedListSettings>(3);
+
+		private void CheckCollectionHandling<TSettings>(int amountOfProperties) where TSettings : new()
+		{
+			// Arrange
+			var settings = new TSettings();
+
+			// Act
+			var properties = EncryptSettingsManager.GetRelevantProperties(settings).ToArray();
+
+			// Assert
+			Assert.That(properties, Has.Length.GreaterThanOrEqualTo(amountOfProperties));
+		}
+
+		#endregion
+
+		#region En-/Decryption
+		
 		[Test]
 		public void Check_Unencrypted_Property_Is_Same()
 		{
@@ -290,6 +374,66 @@ namespace Settings.Encryption.Test
 		}
 
 		[Test]
+		public void Check_Simple_Array_Property_Is_Encrypted()
+		{
+			// Arrange
+			var unencrypted = "unencrypted";
+			var settings = new SimpleArraySettings() { Messages = new [] { unencrypted, unencrypted } };
+			var underlyingSettingsManager = _fixture.Create<Mock<ISettingsManager>>().Object;
+			var settingsManager = new EncryptSettingsManager(underlyingSettingsManager);
+
+			// Act
+			settingsManager.EncryptProperties(settings);
+
+			// Assert
+			Assert.That(settings.Messages.First(), Is.Not.EqualTo(unencrypted));
+			Assert.That(settings.Messages.Last(), Is.Not.EqualTo(unencrypted));
+		}
+
+		[Test]
+		public void Check_Simple_List_Property_Is_Encrypted()
+		{
+			// Arrange
+			var unencrypted = "unencrypted";
+			var settings = new SimpleListSettings() { Messages = new List<string>() { unencrypted, unencrypted } };
+			var underlyingSettingsManager = _fixture.Create<Mock<ISettingsManager>>().Object;
+			var settingsManager = new EncryptSettingsManager(underlyingSettingsManager);
+
+			// Act
+			settingsManager.EncryptProperties(settings);
+
+			// Assert
+			Assert.That(settings.Messages.First(), Is.Not.EqualTo(unencrypted));
+			Assert.That(settings.Messages.Last(), Is.Not.EqualTo(unencrypted));
+		}
+
+		[Test]
+		public void Check_Stacked_List_Property_Is_Encrypted()
+		{
+			// Arrange
+			var unencrypted = "unencrypted";
+			var settings = new StackedListSettings()
+			{
+				StackedMessages = new List<List<string>>()
+				{
+					new List<string>() { unencrypted, unencrypted },
+					new List<string>() { unencrypted, unencrypted },
+				}
+			};
+			var underlyingSettingsManager = _fixture.Create<Mock<ISettingsManager>>().Object;
+			var settingsManager = new EncryptSettingsManager(underlyingSettingsManager);
+
+			// Act
+			settingsManager.EncryptProperties(settings);
+
+			// Assert
+			Assert.That(settings.StackedMessages.First().First(), Is.Not.EqualTo(unencrypted));
+			Assert.That(settings.StackedMessages.First().Last(), Is.Not.EqualTo(unencrypted));
+			Assert.That(settings.StackedMessages.Last().First(), Is.Not.EqualTo(unencrypted));
+			Assert.That(settings.StackedMessages.Last().Last(), Is.Not.EqualTo(unencrypted));
+		}
+
+		[Test]
 		public void Check_True_Is_Returned_If_Not_All_Properties_Are_Encrypted()
 		{
 			// Arrange
@@ -320,5 +464,7 @@ namespace Settings.Encryption.Test
 			// Assert
 			Assert.False(needsEncryption);
 		}
+
+		#endregion
 	}
 }

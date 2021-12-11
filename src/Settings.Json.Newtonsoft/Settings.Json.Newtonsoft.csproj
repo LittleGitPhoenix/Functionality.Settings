@@ -37,6 +37,7 @@
 		<None Include="..\..\LICENSE.md" Pack="true" PackagePath="" Link="⬙\LICENSE.md" />
 		<None Include="..\..\COPYING" Pack="true" PackagePath="" Link="⬙\COPYING" />
 		<None Include="..\..\COPYING.LESSER" Pack="true" PackagePath="" Link="⬙\COPYING.LESSER" />
+		<None Include="..\..\TODO.md" Link="⬙\TODO.md" />
 	</ItemGroup>
 
 	<!-- Move the created NuGet packages into another folder. -->

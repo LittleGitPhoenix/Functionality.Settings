@@ -181,7 +181,7 @@ namespace Phoenix.Functionality.Settings.Json.Newtonsoft
 		}
 
 		/// <summary>
-		/// Deserializes the given file into an <see cref="System.Dynamic.ExpandoObject"/>.
+		/// Deserializes the given <paramref name="settingsFile"/>.
 		/// </summary>
 		/// <param name="settingsFile"> The settings file to deserialize. </param>
 		/// <returns> The deserialized settings object. </returns>
@@ -189,55 +189,10 @@ namespace Phoenix.Functionality.Settings.Json.Newtonsoft
 		{
 			if (settingsFile == null) throw new ArgumentNullException(nameof(settingsFile));
 			if (!settingsFile.Exists) throw new ArgumentException($"The settings file '{settingsFile.FullName}' does not exist.", nameof(settingsFile));
-
-			//void HandleDeserializationError(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs args)
-			//{
-			//	// To continue further deserialization of the file, tell Json.NET that this error has been handled.
-			//	args.ErrorContext.Handled = true;
-			//}
-
-			////var serializer = new JsonSerializer()
-			////{
-			////	MissingMemberHandling = MissingMemberHandling.Ignore,
-			////	DateFormatHandling = DateFormatHandling.IsoDateFormat,
-			////	ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
-			////	ObjectCreationHandling = ObjectCreationHandling.Replace, // This options lets Json.Net override lists that are filled with initial data instead of adding deserialized items to the existing list.
-			////	TypeNameHandling = TypeNameHandling.None,                // If the settings object is more complex, it may be necessary to use 'TypeNameHandling.Auto' here.
-			////	Converters =
-			////	{
-			////		new Newtonsoft.Json.Converters.StringEnumConverter(), // Save enumerations with their name rather than their number.
-			////		new Phoenix.Functionality.Settings.Json.CustomJsonConverters.FileSystemInfoConverter(),
-			////		new Phoenix.Functionality.Settings.Json.CustomJsonConverters.TimeSpanConverter(),
-			////		new Phoenix.Functionality.Settings.Json.CustomJsonConverters.RegexConverter(),
-			////	}
-			////};
-			//var serializer = JsonSerializer.Create(JsonOptions.Instance);
-			//serializer.Error += HandleDeserializationError;
-
-			//try
-			//{
-			//	using (StreamReader streamReader = settingsFile.OpenText())
-			//	using (JsonReader jsonReader = new JsonTextReader(reader: streamReader))
-			//	{
-			//		//// Directly deserialize the file into an expando object.
-			//		//var tempExpando = serializer.Deserialize<System.Dynamic.ExpandoObject>(jsonReader);
-			//		//return tempExpando;
-
-			//		// Directly deserialize the file into an instance of TSettings.
-			//		var instance = serializer.Deserialize<TSettings>(jsonReader);
-			//		return instance;
-			//	}
-			//}
-			//finally
-			//{
-			//	serializer.Error -= HandleDeserializationError;
-			//}
-
-			using (var reader = settingsFile.OpenText())
-			{
-				var json = reader.ReadToEnd();
-				return JsonConvert.DeserializeObject<TSettings>(json, JsonOptions.Instance);
-			}
+			
+			using var reader = settingsFile.OpenText();
+			var json = reader.ReadToEnd();
+			return JsonConvert.DeserializeObject<TSettings>(json, JsonOptions.Instance);
 		}
 
 		/// <summary>

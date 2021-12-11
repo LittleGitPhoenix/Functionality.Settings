@@ -1,9 +1,5 @@
 # Phoenix.Functionality.Settings
 
-| .NET Framework | .NET Standard | .NET Core |
-| :-: | :-: | :-: |
-| :heavy_check_mark: 4.6.1 | :heavy_check_mark: 2.0 | :heavy_check_mark: 2.0 |
-
 Contains assemblies that provide a common way for accessing application settings.
 ___
 
@@ -33,9 +29,9 @@ ___
 
 ## Json.Net
 
-| .NET Framework | .NET Standard | .NET Core |
+| .NET Framework | .NET Standard | .NET |
 | :-: | :-: | :-: |
-| :heavy_check_mark: 4.6.1 | :heavy_check_mark: 2.0 | :heavy_check_mark: 2.0 |
+| :heavy_minus_sign: | :heavy_check_mark: 2.0 | :heavy_check_mark: 5.0 |
 
 This settings manager uses json files as storage. Serialization and deserialization is based on **System.Text.Json**. The file name of the settings file must equal the class name suffixed by **.json**. This can be overridden by `SettingsFileNameAttribute`.
 
@@ -88,9 +84,9 @@ The **Phoenix.Functionality.Settings.Json.Net** provides special converters that
     </div>
 </div>
 
-| .NET Framework | .NET Standard | .NET Core |
+| .NET Framework | .NET Standard | .NET |
 | :-: | :-: | :-: |
-| :heavy_check_mark: 4.6.1 | :heavy_check_mark: 2.0 | :heavy_check_mark: 2.0 |
+| :heavy_minus_sign: | :heavy_check_mark: 2.0 | :heavy_check_mark: 5.0 |
 
 This settings manager uses json files as storage. Serialization and deserialization is based on **Newtonsoft.Json**. The file name of the settings file must equal the class name suffixed by **.json**. This can be overridden by `SettingsFileNameAttribute`.
 
@@ -158,6 +154,20 @@ ___
 
 # Encryption
 
+| .NET Framework | .NET Standard | .NET |
+| :-: | :-: | :-: |
+| :heavy_minus_sign: | :heavy_check_mark: 2.0 | :heavy_check_mark: 5.0 |
+
+<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ff0000; background-color: #ff000020' >
+	<span style='margin-left:1em; text-align:left'>
+    	<b>Warning</b>
+    </span>
+    <br>
+	<div style='margin-left:1em; margin-right:1em;'>
+		Please note, that this is not a cryptografic centered assembly. Therefore you shoul probably not try and use it to save your BitCoin mnemonic.
+    </div>
+</div>
+
 Some information stored in setting files (like database connection strings) may contain sensitive data and should therefore be encrypted.  This can be achieved via the special `EncryptSettingsManager` . It is a decorator for any other `ISettingsManager` and handles de- or encryption of properties attributed with the `EncryptAttribute`.
 
 <div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
@@ -166,9 +176,10 @@ Some information stored in setting files (like database connection strings) may 
     </span>
     <br>
 	<div style='margin-left:1em; margin-right:1em;'>
-        Currently only <b>String</b> or <b>Object</b> property types are supported.
+        Currently only <b>String</b> or <b>Object</b> properties supported. Those can also be wrapped inside arrays or lists.
     </div>
 </div>
+
 
 To use the `EncryptSettingsManager` simply call the extension method `ApplyEncryption` on any other `ISettingsManager` instance.
 
@@ -183,7 +194,16 @@ var settingsManager = JsonSettingsManager
 #endif
 ```
 
-Then, when loading settings, each property attributed with the `EncryptAttribute` will be decrypted if necessary. The `EncryptSettingsManager` will automatically detect, if the properties value needs to be decrypted or not. This is useful during development. For example the above mentioned connection string could still be plain text in its settings file, even if the corresponding property is attributed with the `EncryptAttribute`. When accessing the property from code, it will be readable either way.
+<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
+	<span style='margin-left:1em; text-align:left'>
+    	<b>Information</b>
+    </span>
+    <br>
+	<div style='margin-left:1em; margin-right:1em;'>
+		Encryption is based on <b>AesManaged</b>. The key and vector used to create the symetric encryptor can be specified with an overload of the <i>ApplyEncryption</i> extension method.
+    </div>
+</div>
+When loading settings, each property attributed with the `EncryptAttribute` will be decrypted if necessary. The `EncryptSettingsManager` will automatically detect, if the properties value needs to be decrypted or not. This is useful during development. For example the above mentioned connection string could still be plain text in its settings file, even if the corresponding property is attributed with the `EncryptAttribute`. When accessing the property from code, it will be readable either way.
 
 <div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ff0000; background-color: #ff000020' >
 	<span style='margin-left:1em; text-align:left'>
@@ -199,4 +219,4 @@ ___
 
 # Authors
 
-* **Felix Leistner** - _Initial release_
+* **Felix Leistner**: _v1.x_ - _v2.x_ 

@@ -12,6 +12,8 @@ namespace Settings.Encryption.Test
 		private IFixture _fixture;
 #pragma warning restore 8618
 
+		private readonly EncryptionHelper _encryptionHelper = new EncryptionHelper();
+
 		[SetUp]
 		public void Setup()
 		{
@@ -25,8 +27,8 @@ namespace Settings.Encryption.Test
 			var unencrypted = "unencrypted";
 
 			// Act
-			var encrypted = EncryptionHelper.Encrypt(unencrypted);
-			var decrypted = EncryptionHelper.Decrypt(encrypted);
+			var encrypted = _encryptionHelper.Encrypt(unencrypted);
+			var decrypted = _encryptionHelper.Decrypt(encrypted);
 
 			// Assert
 			Assert.AreEqual(unencrypted, decrypted);
@@ -42,8 +44,8 @@ namespace Settings.Encryption.Test
 			var unencrypted = "unencrypted_unencrypted_unencrypted_unencrypted_unencrypted_unencrypted_unencrypted"; //! Make this string a little bit longer, so that the random position of the encryption marker is not the same for both encryption attems.
 
 			// Act
-			var encrypted1 = EncryptionHelper.Encrypt(unencrypted);
-			var encrypted2 = EncryptionHelper.Encrypt(unencrypted);
+			var encrypted1 = _encryptionHelper.Encrypt(unencrypted);
+			var encrypted2 = _encryptionHelper.Encrypt(unencrypted);
 
 			// Assert
 			Assert.AreNotEqual(encrypted1, encrypted2, "This check may fail, if the random position of the encryption marker is accidentally the same for both independent encryption attempts.");
@@ -56,7 +58,7 @@ namespace Settings.Encryption.Test
 			var unencrypted = "unencrypted";
 
 			// Act
-			var encrypted = EncryptionHelper.Encrypt(unencrypted);
+			var encrypted = _encryptionHelper.Encrypt(unencrypted);
 
 			// Assert
 			Assert.True(encrypted.Contains(EncryptionHelper.Marker));
@@ -69,7 +71,7 @@ namespace Settings.Encryption.Test
 			var pseudoEncrypted = "unencrypted";
 
 			// Act
-			var decrypted = EncryptionHelper.Decrypt(pseudoEncrypted);
+			var decrypted = _encryptionHelper.Decrypt(pseudoEncrypted);
 
 			// Assert
 			Assert.AreEqual(pseudoEncrypted, decrypted);
@@ -79,7 +81,7 @@ namespace Settings.Encryption.Test
 		public void Check_Null_Value_Is_Not_Encrypted()
 		{
 			// Act
-			var encrypted = EncryptionHelper.Encrypt(null);
+			var encrypted = _encryptionHelper.Encrypt(null);
 
 			// Assert
 			Assert.IsNull(encrypted);
@@ -89,7 +91,7 @@ namespace Settings.Encryption.Test
 		public void Check_Null_Value_Is_Not_Decrypted()
 		{
 			// Act
-			var decrypted = EncryptionHelper.Decrypt(null);
+			var decrypted = _encryptionHelper.Decrypt(null);
 
 			// Assert
 			Assert.IsNull(decrypted);

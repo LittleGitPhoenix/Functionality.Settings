@@ -5,34 +5,68 @@
 
 using System;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace Phoenix.Functionality.Settings.Encryption
 {
 	class EncryptionHelper
 	{
-		#region Encryption
-		
+		#region Delegates / Events
+		#endregion
+
+		#region Constants
+
 		// Base64 of string (without quotes): "__@?9I*.d+F%R:ud3^@__"
 		internal const string Marker = "X19APzlJKi5kK0YlUjp1ZDNeQF9f";
-		
-		private static readonly Random Random = new Random();
-		
-		private static readonly byte[] Key = new byte[] { 99, 119, 58, 216, 72, 201, 226, 160, 240, 173, 211, 44, 113, 209, 162, 1, 71, 170, 69, 181, 236, 163, 17, 179, 231, 153, 163, 222, 181, 8, 11, 193 };
 
-		private static readonly byte[] Vector = new byte[] { 13, 48, 69, 91, 47, 97, 0, 169, 126, 212, 252, 221, 150, 34, 252, 216 };
+		#endregion
+
+		#region Fields
+
+		private static readonly Random Random = new Random();
+
+		private static readonly byte[] DefaultKey = new byte[] { 99, 119, 58, 216, 72, 201, 226, 160, 240, 173, 211, 44, 113, 209, 162, 1, 71, 170, 69, 181, 236, 163, 17, 179, 231, 153, 163, 222, 181, 8, 11, 193 };
+
+		private static readonly byte[] DefaultVector = new byte[] { 13, 48, 69, 91, 47, 97, 0, 169, 126, 212, 252, 221, 150, 34, 252, 216 };
+		
+		private readonly byte[] _key;
+		
+		private readonly byte[] _vector;
+
+		#endregion
+
+		#region Properties
+		#endregion
+
+		#region (De)Constructors
+
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		/// <param name="key"> Optional secret key to use for the symmetric algorithm. Default will be <see cref="DefaultKey"/>. </param>
+		/// <param name="vector"> Optional initialization vector to use for the symmetric algorithm. Default will be <see cref="DefaultVector"/>. </param>
+		public EncryptionHelper(byte[]? key = null, byte[]? vector = null)
+		{
+			// Save parameters.
+			_key = key ?? EncryptionHelper.DefaultKey;
+			_vector = vector ?? EncryptionHelper.DefaultVector;
+
+			// Initialize fields.
+		}
+
+		#endregion
+
+		#region Methods
 
 		/// <summary>
 		/// Encrypts <paramref name="text"/>.
 		/// </summary>
 		/// <param name="text"> The text to encrypt. </param>
 		/// <returns> An encrypted and base64 encoded string. </returns>
-		internal static string? Encrypt(string? text)
+		internal string? Encrypt(string? text)
 		{
 			if (text is null) return null;
-			var encryptedData = EncryptionHelper.Encrypt(text, EncryptionHelper.Key, EncryptionHelper.Vector);
+			var encryptedData = EncryptionHelper.Encrypt(text, _key, _vector);
 			var encryptedBase64Text = Convert.ToBase64String(encryptedData);
 			var encryptedText = EncryptionHelper.AddMark(encryptedBase64Text);
 			return encryptedText;
@@ -58,25 +92,23 @@ namespace Phoenix.Functionality.Settings.Encryption
 		/// </summary>
 		/// <param name="encryptedText"> The encrypted and in base64 encoded text. </param>
 		/// <returns> The plain text. </returns>
-		internal static string? Decrypt(string? encryptedText)
+		internal string? Decrypt(string? encryptedText)
 		{
 			if (encryptedText is null) return null;
 			if (!EncryptionHelper.TryRemoveMark(encryptedText, out var encryptedBase64Text)) return encryptedText;
 			var encryptedData = Convert.FromBase64String(encryptedBase64Text);
-			return EncryptionHelper.Decrypt(encryptedData, EncryptionHelper.Key, EncryptionHelper.Vector);
+			return EncryptionHelper.Decrypt(encryptedData, _key, _vector);
 		}
 
 		private static string Decrypt(byte[] encryptedData, byte[] key, byte[] vector)
 		{
 			using var aes = new AesManaged();
 			ICryptoTransform decryptor = aes.CreateDecryptor(key, vector);
-			using (var memoryStream = new MemoryStream(encryptedData))
-			using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
-			using (var reader = new StreamReader(cryptoStream))
-			{
-				var text = reader.ReadToEnd();
-				return text;
-			}
+			using var memoryStream = new MemoryStream(encryptedData);
+			using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
+			using var reader = new StreamReader(cryptoStream);
+			var text = reader.ReadToEnd();
+			return text;
 		}
 		
 		private static string AddMark(string encryptedBase64Text)
