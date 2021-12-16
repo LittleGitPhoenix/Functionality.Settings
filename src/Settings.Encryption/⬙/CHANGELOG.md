@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ___
 
+## 2.2.0 (2021-12-16)
+
+### Added
+
+- Added new attributes `EncryptForceFollowAttribute` and `EncryptDoNotFollowAttribute` that allow to override the automatic mechanism for checking if properties are nested and need to be recursively inspected. Specifying both for the same property will lead to Armageddon, or maybe only `EncryptDoNotFollowAttribute` taking precedence.
+
+### Fixed
+
+- Detecting **.NET** build-in types failed when running an application published as single-file executable because in those cases neither **Type.Module.FullyQualifiedName** nor **Type.Assembly.Location** are set and therefore cannot be used to check if a type is from the framework itself. Since this cannot be bypassed in another way, now all types whose assembly/module starts with **System.** are treated as build-in. For cases where this leads to undesired behavior, the two new attributes `EncryptForceFollowAttribute` and `EncryptDoNotFollowAttribute` have been created.
+___
+
 ## 2.1.0 (2021-12-11)
 
 ### Added
@@ -15,7 +26,7 @@ ___
 
 - When filtering properties of an `ISettings` class that must be encrypted, proper error handling was missing. In some cases where accessing the values of properties via reflection failed, this broke loading the settings altogether.
 - Adding the `Encrypt` attribute to collections was not working as expected. For example attributing a **collection of strings** would not work at all. This has been fixed. Currently the following collections can be attributed:
-	- Arrays, both simple (**string[]**) and stacked (**string[][]**)
+	- Arrays, both simple (**string\[\]**) and stacked (**string\[\]\[\]**)
 	- Lists, both simple (**IList\<string\>**) and stacked (**IList\<IList\<string\>\>**)
 	- Custom classes inheriting from **IList<>**
 ___

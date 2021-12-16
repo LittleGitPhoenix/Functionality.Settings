@@ -8,8 +8,8 @@ using System;
 namespace Phoenix.Functionality.Settings.Encryption
 {
 	/// <summary>
-	/// Attribute to automatically apply encryption to properties of settings.
+	/// Attribute to force checking the properties of the attributed property. This can be used to force following a nested property recursively and overruling the automatic mechanism.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-	public class EncryptAttribute : Attribute { }
+	public class EncryptForceFollowAttribute : Attribute { }
 }

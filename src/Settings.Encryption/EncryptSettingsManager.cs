@@ -23,6 +23,8 @@ namespace Phoenix.Functionality.Settings.Encryption
 
 		private readonly ISettingsManager _underlyingSettingsManager;
 
+		private readonly Action<string>? _writeCallback;
+		
 		private readonly EncryptionHelper _encryptionHelper;
 
 		#endregion
@@ -38,10 +40,12 @@ namespace Phoenix.Functionality.Settings.Encryption
 		/// <param name="underlyingSettingsManager"> The <see cref="ISettingsManager"/> that will be used under the hood. </param>
 		/// <param name="key"> Optional secret key to use for the symmetric algorithm. </param>
 		/// <param name="vector"> Optional initialization vector to use for the symmetric algorithm. </param>
-		public EncryptSettingsManager(ISettingsManager underlyingSettingsManager, byte[]? key = null, byte[]? vector = null)
+		/// <param name="writeCallback"> Optional callback for the internal output. </param>
+		public EncryptSettingsManager(ISettingsManager underlyingSettingsManager, byte[]? key = null, byte[]? vector = null, Action<string>? writeCallback = null)
 		{
 			// Save parameters.
 			_underlyingSettingsManager = underlyingSettingsManager;
+			_writeCallback = writeCallback;
 
 			// Initialize fields.
 			_encryptionHelper = new EncryptionHelper(key, vector);
@@ -106,19 +110,19 @@ namespace Phoenix.Functionality.Settings.Encryption
 		}
 
 		internal IReadOnlyCollection<(Action<object?> Setter, string? StringValue, string Name)> GetRelevantProperties<TSettings>(TSettings settings)
-			=> EncryptSettingsManager.GetRelevantProperties(settings).ToArray();
+			=> EncryptSettingsManager.GetRelevantProperties(settings, _writeCallback).ToArray();
 
-		internal static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> GetRelevantProperties(object? @object, int depth = 0)
+		internal static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> GetRelevantProperties(object? @object, Action<string>? writeCallback, int depth = 0)
 		{
 			var indentation = new string('\t', depth);
 			if (depth >= 100)
 			{
-				Write($"{indentation}Maximum depth has been reached.");
+				writeCallback?.Invoke($"{indentation}Maximum depth has been reached.");
 				yield break;
 			}
 			if (@object is null)
 			{
-				Write($"{indentation}The object is null and can therefore not be handled.");
+				writeCallback?.Invoke($"{indentation}The object is null and can therefore not be handled.");
 				yield break;
 			}
 
@@ -126,25 +130,26 @@ namespace Phoenix.Functionality.Settings.Encryption
 			var properties = type.GetProperties(BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			foreach (var propertyInfo in properties)
 			{
-				foreach (var tuple in CheckPropertyOfObject(@object, propertyInfo, depth))
+				foreach (var tuple in CheckPropertyOfObject(@object, propertyInfo, depth, writeCallback))
 				{
 					yield return tuple;
 				}
 			}
 		}
 
-		internal static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> CheckPropertyOfObject(object @object, PropertyInfo propertyInfo, int depth, bool comesFromAttributedParent = false)
+		private static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> CheckPropertyOfObject(object @object, PropertyInfo propertyInfo, int depth, Action<string>? writeCallback, bool comesFromAttributedParent = false)
 		{
 			var propertyName = propertyInfo.Name;
 			var propertyType = propertyInfo.PropertyType;
 			var isAttributed = comesFromAttributedParent || IsAttributed(propertyInfo);
 
 			var indentation = new string('\t', depth + 1);
-			Write($"{new string('\t', depth)}• {propertyName} ({propertyType}):");
-			//Write($"{indentation}{nameof(propertyType.IsPrimitive)}: {propertyType.IsPrimitive}");
-			Write($"{indentation}IsAttributed: {isAttributed}");
-			//Write($"{indentation}{nameof(propertyType.Module.ScopeName)}: {propertyType.Module.ScopeName}");
-			//Write($"{indentation}{nameof(propertyType.Module.FullyQualifiedName)}: {propertyType.Module.FullyQualifiedName}");
+			writeCallback?.Invoke($"{new string('\t', depth)}• {propertyName} ({propertyType}):");
+			//writeCallback?.Invoke($"{indentation}{nameof(propertyType.IsPrimitive)}: {propertyType.IsPrimitive}");
+			//writeCallback?.Invoke($"{indentation}IsAttributed: {isAttributed}");
+			//writeCallback?.Invoke($"{indentation}{nameof(propertyType.Module.ScopeName)}: {propertyType.Module.ScopeName}");
+			//writeCallback?.Invoke($"{indentation}{nameof(propertyType.Module.FullyQualifiedName)}: {propertyType.Module.FullyQualifiedName}");
+			//writeCallback?.Invoke($"{indentation}{nameof(propertyType.Assembly.Location)}: {propertyType.Assembly.Location}");
 
 			object? value;
 			try
@@ -153,17 +158,33 @@ namespace Phoenix.Functionality.Settings.Encryption
 			}
 			catch (Exception ex)
 			{
-				Write($"{indentation}⇒ An error occurred while trying to get the value of the property.");
-				Write($"{indentation}⇒ {ex}");
+				writeCallback?.Invoke($"{indentation}⇒ An error occurred while trying to get the value of the property.");
+				writeCallback?.Invoke($"{indentation}⇒ {ex}");
 				yield break;
 			}
 
 			if (!isAttributed)
 			{
-				if (IsNested(propertyType))
+				if (ShouldNotFollow(propertyInfo))
 				{
-					Write($"{indentation}⇒ The property is nested. Its value will be inspected.");
-					foreach (var tuple in GetRelevantProperties(value, depth + 1))
+					writeCallback?.Invoke($"{indentation}⇒ The property is attributed with {nameof(EncryptDoNotFollowAttribute)} and will not be analyzed further.");
+					yield break;
+				}
+
+				var isNested = false;
+				if (ShouldFollow(propertyInfo))
+				{
+					isNested = true;
+					writeCallback?.Invoke($"{indentation}⇒ The property is attributed with {nameof(EncryptForceFollowAttribute)}. Its value will be inspected.");
+				}
+				if (!isNested && IsNested(propertyType))
+				{
+					isNested = true;
+					writeCallback?.Invoke($"{indentation}⇒ The property is nested. Its value will be inspected.");
+				}
+				if (isNested)
+				{
+					foreach (var tuple in GetRelevantProperties(value, writeCallback, depth + 1))
 					{
 						yield return tuple;
 					}
@@ -173,11 +194,11 @@ namespace Phoenix.Functionality.Settings.Encryption
 				if (IsCollection(propertyType))
 				{
 					IEnumerable? enumerable = value as IEnumerable;
-					Write($"{indentation}⇒ The property is a collection. Its items will be inspected.");
+					writeCallback?.Invoke($"{indentation}⇒ The property is a collection. Its items will be inspected.");
 					foreach (var item in enumerable ?? Array.Empty<object>())
 					{
-						//TODO Check each item if it is either directly supported (string) or a nested type.
-						foreach (var tuple in GetRelevantProperties(item, depth + 1))
+						// Check each item if it is either directly supported (string) or a nested type.
+						foreach (var tuple in GetRelevantProperties(item, writeCallback, depth + 1))
 						{
 							yield return tuple;
 						}
@@ -185,13 +206,13 @@ namespace Phoenix.Functionality.Settings.Encryption
 					yield break;
 				}
 
-				Write($"{indentation}⇒ The property is not attributed and no nested or collection type.");
+				writeCallback?.Invoke($"{indentation}⇒ The property is not attributed and no nested or collection type.");
 				yield break;
 			}
 
 			if (IsSupported(propertyType))
 			{
-				Write($"{indentation}⇒ The property is attributed and of a supported type. It will be de-/encrypted.");
+				writeCallback?.Invoke($"{indentation}⇒ The property is attributed and of a supported type. It will be de-/encrypted.");
 
 				Action<object?> setter = (newValue) => propertyInfo.SetValue(@object, newValue);
 				var stringValue = value?.ToString();
@@ -202,33 +223,33 @@ namespace Phoenix.Functionality.Settings.Encryption
 			if (IsCollection(propertyType))
 			{
 				IList list = value as IList ?? Array.Empty<object>();
-				foreach (var tuple in HandleAttributedList(list, propertyName, depth))
+				foreach (var tuple in HandleAttributedList(list, propertyName, depth, writeCallback))
 				{
 					yield return tuple;
 				}
 				yield break;
 			}
 
-			Write($"{indentation}⇒ The property is attributed but its type is not supported.");
+			writeCallback?.Invoke($"{indentation}⇒ The property is attributed but its type is not supported.");
 		}
 
-		internal static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> HandleAttributedList(IList list, string propertyName, int depth)
+		private static IEnumerable<(Action<object?> Setter, string? StringValue, string Name)> HandleAttributedList(IList list, string propertyName, int depth, Action<string>? writeCallback)
 		{
 			var indentation = new string('\t', depth + 1);
 			if (depth >= 100)
 			{
-				Write($"{indentation}Maximum depth has been reached.");
+				writeCallback?.Invoke($"{indentation}Maximum depth has been reached (List handling).");
 				yield break;
 			}
 
 			if (!TryGetGenericListType(list.GetType(), out var genericType))
 			{
-				Write($"{indentation}⇒ The property is an attributed but non-generic list.");
+				writeCallback?.Invoke($"{indentation}⇒ The property is an attributed but non-generic list.");
 			}
 			else if (IsSupported(genericType))
 			{
 				// Prepare all values of the list for en-/decryption.
-				Write($"{indentation}⇒ The property is an attributed list consisting of supported types. Its {list.Count} item(s) will be de-/encrypted.");
+				writeCallback?.Invoke($"{indentation}⇒ The property is an attributed list consisting of supported types. Its {list.Count} item(s) will be de-/encrypted.");
 				for (var index = 0; index < list.Count; index++)
 				{
 					var localIndex = index;
@@ -239,11 +260,11 @@ namespace Phoenix.Functionality.Settings.Encryption
 			else if (IsCollection(genericType))
 			{
 				// This seems to be a nested collection. Execute a recursive call with the values.
-				Write($"{indentation}⇒ The property is an attributed but stacked list. Its {list.Count} item(s) will be inspected.");
+				writeCallback?.Invoke($"{indentation}⇒ The property is an attributed but stacked list. Its {list.Count} item(s) will be inspected.");
 				foreach (var item in list)
 				{
 					IList nestedList = item as IList ?? Array.Empty<object>();
-					foreach (var tuple in HandleAttributedList(nestedList,propertyName, depth + 1))
+					foreach (var tuple in HandleAttributedList(nestedList,propertyName, depth + 1, writeCallback))
 					{
 						yield return tuple;
 					}
@@ -251,7 +272,7 @@ namespace Phoenix.Functionality.Settings.Encryption
 			}
 			else
 			{
-				Write($"{indentation}⇒ The property is an attributed list of an unsupported type '{genericType}'.");
+				writeCallback?.Invoke($"{indentation}⇒ The property is an attributed list of an unsupported type '{genericType}'.");
 			}
 		}
 		
@@ -266,27 +287,47 @@ namespace Phoenix.Functionality.Settings.Encryption
 			if (propertyType != typeof(string) && propertyType != typeof(object)) return false;
 			return true;
 		}
-		
-		private static bool IsNested(Type type)
+
+		internal static bool ShouldNotFollow(PropertyInfo propertyInfo)
 		{
-			if (type == typeof(ISettings)) return true; //! Handle settings directly, as this is always the first object that will be checked.
+			if (propertyInfo.GetCustomAttribute<EncryptDoNotFollowAttribute>() is not null) return true; // Manual specification overrules the automatic mechanism.
+			return false;
+		}
+
+		internal static bool ShouldFollow(PropertyInfo propertyInfo)
+		{
+			if (propertyInfo.GetCustomAttribute<EncryptForceFollowAttribute>() is not null) return true; // Manual specification overrules the automatic mechanism.
+			return false;
+		}
+
+		internal static bool IsNested(Type type)
+		{
+			if (type == typeof(ISettings)) return true; // Handle settings directly, as this is always the first object that will be checked.
 			
 			if (type.IsPrimitive) return false;
-			if (type == typeof(string)) return false; //! Handle strings directly, because it will be one of the most commonly encountered types and it is also an IEnumerable, that shouldn't be enumerated.
-
+			if (type == typeof(string)) return false; // Strings will be one of the most commonly encountered types and they are also an IEnumerable, that shouldn't be enumerated.
+			if (IsCollection(type)) return false; // Collections must also not be treated as nested.
+			
 			// This filters build-in types for .Net Framework.
 			if (type.Module.ScopeName == "CommonLanguageRuntimeLibrary") return false;
 
-			//TODO This should be improved.
 			// This filters build-in types for .Net.
-			if (type.Module.ScopeName.StartsWith("System.") && type.Module.FullyQualifiedName.Contains("dotnet")) return false;
-
+			/*!
+			Unfortunately the 'type.Module.FullyQualifiedName' is not set when running an application published as a single-file executable. Same goes for 'type.Assembly.Location'.
+			Therefor, as to prevent all properties being treated as nested when running single-file executables, the whole namespace 'System' is excluded. This my cause problems,
+			if custom code uses this namespace too.
+			*/
+			//if (type.Module.ScopeName.StartsWith("System.") && type.Module.FullyQualifiedName.Contains("dotnet")) return false;
+			if (type.Module.ScopeName.StartsWith("System.")) return false;
+			
 			return true;
 		}
 
-		private static bool IsCollection(Type propertyType)
+		internal static bool IsCollection(Type type)
 		{
-			if (propertyType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(propertyType)) return true;
+			if (type == typeof(string)) return false;                     // Since strings are enumerable, they must be excluded separately.
+			if (typeof(IDictionary).IsAssignableFrom(type)) return false; // Dictionaries are enumerable but are currently not supported.
+			if (typeof(IEnumerable).IsAssignableFrom(type)) return true;
 			return false;
 		}
 
@@ -319,13 +360,6 @@ namespace Phoenix.Functionality.Settings.Encryption
 			}
 
 			return  genericType is not null;
-		}
-
-		private static void Write(string message)
-		{
-#if DEBUG
-			//System.Console.WriteLine(message);
-#endif
 		}
 
 		#endregion

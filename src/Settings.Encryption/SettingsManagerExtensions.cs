@@ -16,10 +16,11 @@ namespace Phoenix.Functionality.Settings.Encryption
 		/// Each property annotated with the <see cref="EncryptAttribute"/> from will automatically be de- or encrypted.
 		/// </summary>
 		/// <param name="settingsManager"> The extended <see cref="ISettingsManager"/>. </param>
+		/// <param name="writeCallback"> Optional callback for the internal output of the <see cref="EncryptSettingsManager"/>. Default is null. </param>
 		/// <returns> An <see cref="ISettingsManager"/> for chaining. </returns>
-		public static ISettingsManager ApplyEncryption(this ISettingsManager settingsManager)
+		public static ISettingsManager ApplyEncryption(this ISettingsManager settingsManager, Action<string>? writeCallback = null)
 		{
-			return new EncryptSettingsManager(settingsManager);
+			return new EncryptSettingsManager(settingsManager, writeCallback: writeCallback);
 		}
 
 		/// <summary>
@@ -28,10 +29,11 @@ namespace Phoenix.Functionality.Settings.Encryption
 		/// <param name="settingsManager"> The extended <see cref="ISettingsManager"/>. </param>
 		/// <param name="key"> The secret key to use for the symmetric algorithm. </param>
 		/// <param name="vector"> The initialization vector to use for the symmetric algorithm. </param>
+		/// <param name="writeCallback"> Optional callback for the internal output of the <see cref="EncryptSettingsManager"/>. Default is null. </param>
 		/// <returns> An <see cref="ISettingsManager"/> for chaining. </returns>
-		public static ISettingsManager ApplyEncryption(this ISettingsManager settingsManager, byte[] key, byte[] vector)
+		public static ISettingsManager ApplyEncryption(this ISettingsManager settingsManager, byte[] key, byte[] vector, Action<string>? writeCallback = null)
 		{
-			return new EncryptSettingsManager(settingsManager, key, vector);
+			return new EncryptSettingsManager(settingsManager, key, vector, writeCallback);
 		}
 	}
 }

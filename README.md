@@ -168,6 +168,16 @@ ___
     </div>
 </div>
 
+<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
+	<span style='margin-left:1em; text-align:left'>
+    	<b>Information</b>
+    </span>
+    <br>
+	<div style='margin-left:1em; margin-right:1em;'>
+		Encryption is based on <b>AesManaged</b>. The key and vector used to create the symetric encryptor can be specified with an overload of the <i>ApplyEncryption</i> extension method.
+    </div>
+</div>
+
 Some information stored in setting files (like database connection strings) may contain sensitive data and should therefore be encrypted.  This can be achieved via the special `EncryptSettingsManager` . It is a decorator for any other `ISettingsManager` and handles de- or encryption of properties attributed with the `EncryptAttribute`.
 
 <div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
@@ -179,8 +189,6 @@ Some information stored in setting files (like database connection strings) may 
         Currently only <b>String</b> or <b>Object</b> properties supported. Those can also be wrapped inside arrays or lists.
     </div>
 </div>
-
-
 To use the `EncryptSettingsManager` simply call the extension method `ApplyEncryption` on any other `ISettingsManager` instance.
 
 ```csharp
@@ -194,16 +202,17 @@ var settingsManager = JsonSettingsManager
 #endif
 ```
 
-<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
+When loading settings, the `EncryptSettingsManager` traverses all properties of the corresponding settings instance searching for the `EncryptAttribute` to decrypt their values, so accessing them from code will always return meaningful data. The `EncryptSettingsManager` handles nested properties as well as certain collection types and recursively traverses them as well.
+
+<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ffd200; background-color: #ffd20020' >
 	<span style='margin-left:1em; text-align:left'>
-    	<b>Information</b>
+    	<b>Advice</b>
     </span>
     <br>
 	<div style='margin-left:1em; margin-right:1em;'>
-		Encryption is based on <b>AesManaged</b>. The key and vector used to create the symetric encryptor can be specified with an overload of the <i>ApplyEncryption</i> extension method.
+		To only recursively traverse user-created types the <i>EncryptSettingsManager</i> must distingusih those types from the <b>.NET</b> build-in types. To make this possible (especially within apps that are published as single-file executable) the manager will not traverse into  types that come from assemblies whose name starts with <b>System</b>.<br><br>The <b><i>EncryptForceFollowAttribute</i></b> can be used in cases where this may be undesireable, to force the <i>EncryptSettingsManager</i> to traverse the attributed property nevertheless.<br><br>The <b><i>EncryptDoNotFollowAttribute</i></b> on the other side will instruct the manager to not traverse the attributed property.
     </div>
 </div>
-When loading settings, each property attributed with the `EncryptAttribute` will be decrypted if necessary. The `EncryptSettingsManager` will automatically detect, if the properties value needs to be decrypted or not. This is useful during development. For example the above mentioned connection string could still be plain text in its settings file, even if the corresponding property is attributed with the `EncryptAttribute`. When accessing the property from code, it will be readable either way.
 
 <div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ff0000; background-color: #ff000020' >
 	<span style='margin-left:1em; text-align:left'>
@@ -211,9 +220,10 @@ When loading settings, each property attributed with the `EncryptAttribute` will
     </span>
     <br>
 	<div style='margin-left:1em; margin-right:1em;'>
-		Encryption is automatically applied when a settings instance is <b>loaded</b>. This means, that loading will encrypt the underlying settings file. It is therefore recommended to only use encryption in release build like shown in the above example.
+		Encryption is automatically applied when a settings instance is <b>loaded</b>. This means, that loading encrypts the value in the source of the settings. It is therefore recommended to only use encryption in release builds like shown in the above example.
     </div>
 </div>
+
 
 ___
 

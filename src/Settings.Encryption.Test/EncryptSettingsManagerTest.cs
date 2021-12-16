@@ -28,6 +28,8 @@ namespace Settings.Encryption.Test
 
 		class MultiplePropertiesSettings : ISettings
 		{
+			public string UnattributedString { get; set; }
+
 			[Encrypt]
 			public string PublicProperty { get; set; }
 
@@ -74,7 +76,22 @@ namespace Settings.Encryption.Test
 
 			internal IReadOnlyCollection<Inner> InnerInstances { get; set; } = new Inner[] { new Inner(), new Inner() };
 		}
+		
+		class DontFollowSettings : ISettings
+		{
+			internal class Inner
+			{
+				[Encrypt]
+				public string? Message { get; set; }
+			}
 
+			[EncryptDoNotFollow]
+			internal Inner InnerInstance { get; set; } = new Inner();
+
+			[EncryptDoNotFollow]
+			internal IReadOnlyCollection<Inner> IgnoredProperty { get; set; } = new Inner[] { new Inner(), new Inner() };
+		}
+		
 		class IntegerSettings : ISettings
 		{
 			[Encrypt]
@@ -119,11 +136,82 @@ namespace Settings.Encryption.Test
 			[Encrypt]
 			internal EncryptedCollection NestedMessages { get; set; } = new EncryptedCollection();
 		}
-
+		
 		#endregion
 
 		#region Property Detection
 
+		[Test]
+		[TestCase(typeof(string), false)]
+		[TestCase(typeof(Dictionary<object, object>), false)]
+		[TestCase(typeof(List<object>), false)]
+		[TestCase(typeof(object[]), false)]
+		[TestCase(typeof(IPAddress), false)]
+		[TestCase(typeof(NestedSettings.Inner), true)]
+		public void Check_Is_Treated_As_Nested(Type nestedType, bool shouldBeTreatedAsCollection)
+		{
+			// Act
+			var isNested = EncryptSettingsManager.IsNested(nestedType);
+
+			// Assert
+			Assert.AreEqual(isNested, shouldBeTreatedAsCollection);
+		}
+
+		[Test]
+		[TestCase(typeof(string), false)]
+		[TestCase(typeof(Dictionary<object, object>), false)]
+		[TestCase(typeof(List<object>), true)]
+		[TestCase(typeof(object[]), true)]
+		public void Check_Is_Treated_As_Collection(Type collectionType, bool shouldBeTreatedAsCollection)
+		{
+			// Act
+			var isCollection = EncryptSettingsManager.IsCollection(collectionType);
+
+			// Assert
+			Assert.AreEqual(isCollection, shouldBeTreatedAsCollection);
+		}
+
+		[Test]
+		public void Check_System_Namespace_Is_Ignored()
+		{
+			Assert.Ignore("This would need a custom assembly name 'System.[...].dll' which is currently not implemented.");
+			//// Arrange
+			//var settings = new CantFollowSettings();
+
+			//// Act
+			//var properties = EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray();
+
+			//// Assert
+			//Assert.IsEmpty(properties);
+		}
+
+		[Test]
+		public void Check_EncryptDoNotFollowAttribute_Overrules()
+		{
+			// Arrange
+			var settings = new DontFollowSettings();
+
+			// Act
+			var properties = EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray();
+
+			// Assert
+			Assert.IsEmpty(properties);
+		}
+
+		[Test]
+		public void Check_EncryptForceFollowAttribute_Overrules()
+		{
+			Assert.Ignore("This would need a custom assembly name 'System.[...].dll' which is currently not implemented.");
+			//// Arrange
+			//var settings = new ForceFollowSettings();
+
+			//// Act
+			//var properties = EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray();
+
+			//// Assert
+			//Assert.That(properties, Has.Length.EqualTo(1));
+			//Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(System.Test.NestedClassFromSystemNamespace.Message)).Name); // '.Name' → Access some property, because the value tuple itself will always be available.
+		}
 
 		[Test]
 		public void Check_Relevant_Properties_Are_Filtered()
@@ -132,7 +220,7 @@ namespace Settings.Encryption.Test
 			var settings = new MultiplePropertiesSettings();
 
 			// Act
-			var properties = EncryptSettingsManager.GetRelevantProperties(settings).ToArray();
+			var properties = EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray();
 
 			// Assert
 			Assert.That(properties, Has.Length.GreaterThanOrEqualTo(1));
@@ -142,6 +230,7 @@ namespace Settings.Encryption.Test
 			Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.InternalProperty)).Name);
 			Assert.IsNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.InvalidProperty)).Name);
 			Assert.IsNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.IrrelevantProperty)).Name);
+			Assert.IsNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.UnattributedString)).Name);
 		}
 
 		[Test]
@@ -151,7 +240,7 @@ namespace Settings.Encryption.Test
 			var settings = new NestedSettings();
 
 			// Act
-			var properties = EncryptSettingsManager.GetRelevantProperties(settings).ToArray();
+			var properties = EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray();
 
 			// Assert
 			Assert.That(properties, Has.Length.EqualTo(3));
@@ -165,7 +254,7 @@ namespace Settings.Encryption.Test
 			var settings = new ThrowingSettings();
 
 			// Act + Assert
-			Assert.DoesNotThrow(() => EncryptSettingsManager.GetRelevantProperties(settings).ToArray());
+			Assert.DoesNotThrow(() => EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray());
 		}
 
 		[Test]
@@ -190,7 +279,7 @@ namespace Settings.Encryption.Test
 			var settings = new TSettings();
 
 			// Act
-			var properties = EncryptSettingsManager.GetRelevantProperties(settings).ToArray();
+			var properties = EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray();
 
 			// Assert
 			Assert.That(properties, Has.Length.GreaterThanOrEqualTo(amountOfProperties));
