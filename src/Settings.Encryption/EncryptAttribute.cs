@@ -3,13 +3,10 @@
 #endregion
 
 
-using System;
+namespace Phoenix.Functionality.Settings.Encryption;
 
-namespace Phoenix.Functionality.Settings.Encryption
-{
-	/// <summary>
-	/// Attribute to automatically apply encryption to properties of settings.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-	public class EncryptAttribute : Attribute { }
-}
+/// <summary>
+/// Attribute to automatically apply encryption to properties of settings.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+public class EncryptAttribute : Attribute { }

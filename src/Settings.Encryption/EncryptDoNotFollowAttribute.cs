@@ -3,13 +3,10 @@
 #endregion
 
 
-using System;
+namespace Phoenix.Functionality.Settings.Encryption;
 
-namespace Phoenix.Functionality.Settings.Encryption
-{
-	/// <summary>
-	/// Attribute to not check the properties of the attributed property. This can be used to stop the automatic mechanism from following a nested property recursively.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-	public class EncryptDoNotFollowAttribute : Attribute { }
-}
+/// <summary>
+/// Attribute to not check the properties of the attributed property. This can be used to stop the automatic mechanism from following a nested property recursively.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+public class EncryptDoNotFollowAttribute : Attribute { }

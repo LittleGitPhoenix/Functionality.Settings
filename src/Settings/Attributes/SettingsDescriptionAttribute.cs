@@ -3,28 +3,25 @@
 #endregion
 
 
-using System;
+namespace Phoenix.Functionality.Settings;
 
-namespace Phoenix.Functionality.Settings
+/// <summary>
+/// The description for the <see cref="ISettings"/> class or property.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+public class SettingsDescriptionAttribute : Attribute
 {
 	/// <summary>
-	/// The description for the <see cref="ISettings"/> class or property.
+	/// The description for the settings class or property.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-	public class SettingsDescriptionAttribute : Attribute
-	{
-		/// <summary>
-		/// The description for the settings class or property.
-		/// </summary>
-		public string Description { get; }
+	public string Description { get; }
 
-		/// <summary>
-		/// Constructor
-		/// </summary>
-		/// <param name="description"> The description for the settings class or property. </param>
-		public SettingsDescriptionAttribute(string description)
-		{
-			this.Description = description;
-		}
+	/// <summary>
+	/// Constructor
+	/// </summary>
+	/// <param name="description"> The description for the settings class or property. </param>
+	public SettingsDescriptionAttribute(string description)
+	{
+		this.Description = description;
 	}
 }

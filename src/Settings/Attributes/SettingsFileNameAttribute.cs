@@ -3,28 +3,25 @@
 #endregion
 
 
-using System;
+namespace Phoenix.Functionality.Settings;
 
-namespace Phoenix.Functionality.Settings
+/// <summary>
+/// Defines a custom name for a <see cref="ISettings"/> class.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+public class SettingsFileNameAttribute : Attribute
 {
 	/// <summary>
-	/// Defines a custom name for a <see cref="ISettings"/> class.
+	/// The custom name for the settings class.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-	public class SettingsFileNameAttribute : Attribute
-	{
-		/// <summary>
-		/// The custom name for the settings class.
-		/// </summary>
-		public string Name { get; }
+	public string Name { get; }
 
-		/// <summary>
-		/// Constructor
-		/// </summary>
-		/// <param name="name"> The custom name for the settings class. </param>
-		public SettingsFileNameAttribute(string name)
-		{
-			this.Name = name;
-		}
+	/// <summary>
+	/// Constructor
+	/// </summary>
+	/// <param name="name"> The custom name for the settings class. </param>
+	public SettingsFileNameAttribute(string name)
+	{
+		this.Name = name;
 	}
 }

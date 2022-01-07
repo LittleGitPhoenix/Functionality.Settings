@@ -3,126 +3,122 @@
 #endregion
 
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Phoenix.Functionality.Settings.Cache
+namespace Phoenix.Functionality.Settings.Cache;
+
+/// <summary>
+/// Implementation of an <see cref="ISettingsCache"/> using weak references.
+/// </summary>
+public class WeakSettingsCache : ISettingsCache
 {
+	#region Delegates / Events
+	#endregion
+
+	#region Constants
+	#endregion
+
+	#region Fields
+
+	private readonly ConcurrentDictionary<Type, WeakReference<object>> _cache;
+
+	#endregion
+
+	#region Properties
+	#endregion
+
+	#region (De)Constructors
+
 	/// <summary>
-	/// Implementation of an <see cref="ISettingsCache"/> using weak references.
+	/// Constructor
 	/// </summary>
-	public class WeakSettingsCache : ISettingsCache
+	public WeakSettingsCache()
 	{
-		#region Delegates / Events
-		#endregion
+		// Save parameters.
 
-		#region Constants
-		#endregion
+		// Initialize fields.
+		_cache = new ConcurrentDictionary<Type, WeakReference<object>>();
+	}
 
-		#region Fields
+	#endregion
 
-		private readonly ConcurrentDictionary<Type, WeakReference<ISettings>> _cache;
+	#region Methods
 
-		#endregion
+	/// <inheritdoc />
+	public ICollection<ISettings> GetAllCachedSettings()
+	{
+		return _cache
+			.Values
+			.Select
+			(
+				reference =>
+				{
+					reference.TryGetTarget(out var cachedSettings);
+					return cachedSettings as ISettings;
+				}
+			)
+			.Where(settings => settings != null)
+			// ReSharper disable once SuspiciousTypeConversion.Global → The above filter removes all null elements and it is therefor save to cast the collection.
+			.Cast<ISettings>()
+			.ToArray()
+			;
+	}
 
-		#region Properties
-		#endregion
+	/// <inheritdoc />
+	public bool TryGet<TSettings>(out TSettings? settings) where TSettings : class, ISettings
+	{
+		var key = WeakSettingsCache.GetKey<TSettings>();
+		object? cachedSettings = default;
+		var wasLoadedFromCache = _cache.TryGetValue(key, out var cachedReference) && cachedReference.TryGetTarget(out cachedSettings);
+		settings = cachedSettings is not null ? (TSettings) cachedSettings : null;
+		return wasLoadedFromCache;
+	}
 
-		#region (De)Constructors
+	/// <inheritdoc />
+	public void AddOrUpdate<TSettings>(TSettings settings) where TSettings : class, ISettings
+	{
+		var key = WeakSettingsCache.GetKey<TSettings>();
+		_cache.AddOrUpdate(key, new WeakReference<object>(settings), (_, _) => new WeakReference<object>(settings));
+	}
 
-		/// <summary>
-		/// Constructor
-		/// </summary>
-		public WeakSettingsCache()
+	/// <inheritdoc />
+	public bool TryGetOrAdd<TSettings>(out TSettings settings, Func<TSettings> factory) where TSettings : class, ISettings
+	{
+		var key = WeakSettingsCache.GetKey<TSettings>();
+
+		if (_cache.TryGetValue(key, out var cachedReference))
 		{
-			// Save parameters.
-
-			// Initialize fields.
-			_cache = new ConcurrentDictionary<Type, WeakReference<ISettings>>();
-		}
-
-		#endregion
-
-		#region Methods
-
-		/// <inheritdoc />
-		public ICollection<ISettings> GetAllCachedSettings()
-		{
-			return _cache
-				.Values
-				.Select
-				(
-					reference =>
-					{
-						reference.TryGetTarget(out var settings);
-						return settings;
-					}
-				)
-				.Where(settings => settings != null)
-				.ToArray()
-				;
-		}
-
-		/// <inheritdoc />
-		public bool TryGet<TSettings>(out TSettings settings) where TSettings : ISettings
-		{
-			ISettings cachedSettings = default;
-
-			var key = WeakSettingsCache.GetKey<TSettings>();
-			var wasLoadedFromCache = _cache.TryGetValue(key, out var cachedReference) && cachedReference.TryGetTarget(out cachedSettings);
-			settings = (TSettings) cachedSettings;
-			return wasLoadedFromCache;
-		}
-
-		/// <inheritdoc />
-		public void AddOrUpdate<TSettings>(TSettings settings) where TSettings : ISettings
-		{
-			var key = WeakSettingsCache.GetKey<TSettings>();
-			_cache.AddOrUpdate(key, new WeakReference<ISettings>(settings), (_, __) => new WeakReference<ISettings>(settings));
-		}
-
-		/// <inheritdoc />
-		public bool TryGetOrAdd<TSettings>(out TSettings settings, Func<TSettings> factory) where TSettings : ISettings
-		{
-			var key = WeakSettingsCache.GetKey<TSettings>();
-
-			if (_cache.TryGetValue(key, out var cachedReference))
+			if (cachedReference.TryGetTarget(out var cachedSettings))
 			{
-				if (cachedReference.TryGetTarget(out var cachedSettings))
-				{
-					// Get the instance from the cache.
-					settings = (TSettings) cachedSettings;
-					return true;
-				}
-				else
-				{
-					// The settings has been garbage collected, so refresh it with a new instance.
-					settings = factory.Invoke();
-					cachedReference.SetTarget(settings);
-					return false;
-				}
+				// Get the instance from the cache.
+				settings = (TSettings) cachedSettings;
+				return true;
 			}
 			else
 			{
-				// Nothing has been cached, create a new instance.
+				// The settings has been garbage collected, so refresh it with a new instance.
 				settings = factory.Invoke();
-				_cache.TryAdd(key, new WeakReference<ISettings>(settings));
+				cachedReference.SetTarget(settings);
 				return false;
 			}
 		}
-
-		/// <summary>
-		/// Gets the value from <typeparamref name="TSettings"/> used as key in the underlying cache.
-		/// </summary>
-		private static Type GetKey<TSettings>()
+		else
 		{
-			var type = typeof(TSettings);
-			return type;
-			//return type.AssemblyQualifiedName ?? type.FullName ?? $"{type.Namespace}.{type.Name}";
+			// Nothing has been cached, create a new instance.
+			settings = factory.Invoke();
+			_cache.TryAdd(key, new WeakReference<object>(settings));
+			return false;
 		}
-
-		#endregion
 	}
+
+	/// <summary>
+	/// Gets the value from <typeparamref name="TSettings"/> used as key in the underlying cache.
+	/// </summary>
+	private static Type GetKey<TSettings>()
+	{
+		var type = typeof(TSettings);
+		return type;
+	}
+
+	#endregion
 }

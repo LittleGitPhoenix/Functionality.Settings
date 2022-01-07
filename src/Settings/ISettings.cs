@@ -3,12 +3,9 @@
 #endregion
 
 
-using System.IO;
+namespace Phoenix.Functionality.Settings;
 
-namespace Phoenix.Functionality.Settings
-{
-	/// <summary>
-	/// Default interface for settings classes.
-	/// </summary>
-	public interface ISettings { }
-}
+/// <summary>
+/// Default interface for settings classes.
+/// </summary>
+public interface ISettings { }
