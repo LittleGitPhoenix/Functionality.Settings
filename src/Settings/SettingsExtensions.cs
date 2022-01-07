@@ -61,26 +61,20 @@ namespace Phoenix.Functionality.Settings
 		}
 
 		/// <summary>
-		/// Reloads the settings inferred from the type of the passed <paramref name="settings"/> instance and returns new instance.
+		/// Reloads the settings inferred from the type of the passed <paramref name="settings"/> instance and returns a new instance.
 		/// </summary>
 		/// <typeparam name="TSettings"> The concrete type of the <paramref name="settings"/>. </typeparam>
 		/// <param name="settings"> The extended <see cref="ISettings"/> instance. </param>
 		/// <param name="preventUpdate"> This prevents the <see cref="ISettingsManager"/> used for reloading from updating the underlying data source of the settings instance in case later differs from it. </param>
 		/// <returns> A new instance of <typeparamref name="TSettings"/>. </returns>
-		/// <exception cref="SettingsTypeMismatchException"> Thrown if <typeparamref name="TSettings"/> does not match the type of the <paramref name="settings"/>. </exception>
-		/// <exception cref="MissingSettingsManagerException"> Thrown if the <paramref name="settings"/> instance is not linked to a cached <see cref="ISettingsManager"/>. Use the hidden <see cref="InitializeExtensionMethods{TSettings}"/> method for initialization. </exception>
+		/// <exception cref="MissingSettingsManagerException"> Thrown if the <paramref name="settings"/> instance is not linked to a cached <see cref="ISettingsManager"/>. Use the hidden <see cref="InitializeExtensionMethods"/> method for initialization. </exception>
 		/// <remarks>
 		/// <para> Any <see cref="ISettingsCache"/> will be ignored. </para>
 		/// <para> This extension method will only work for <see cref="ISettings"/> instances that called the <see cref="InitializeExtensionMethods"/> method so that the <see cref="ISettingsManager"/> that was used to load the instance has been cached internally and can be used for saving. </para>
 		/// </remarks>
-		public static TSettings Reload<TSettings>(this ISettings settings, bool preventUpdate = false)
+		public static TSettings Reload<TSettings>(this TSettings settings, bool preventUpdate = false)
 			where TSettings : class, ISettings, new()
 		{
-			if (typeof(TSettings) != settings.GetType())
-			{
-				throw new SettingsTypeMismatchException(typeof(TSettings), settings.GetType());
-			}
-
 			if (!SettingsExtensions.Cache.TryGetValue(typeof(TSettings), out var settingsManager))
 			{
 				throw new MissingSettingsManagerException(settings);
@@ -142,6 +136,7 @@ namespace Phoenix.Functionality.Settings
 	/// <summary>
 	/// Exception thrown if the generic <c>TSettings</c> parameter of an extension methods of <see cref="ISettings"/> does not match the type of the settings instance.
 	/// </summary>
+	[Obsolete("The 'Reload' extension method - that was the only one to throw this exception - now has its generic parameter match the extended settings type. therefor making this exception superfluous.")]
 	public sealed class SettingsTypeMismatchException : SettingsExtensionMethodException
 	{
 		/// <summary> The expected type of the settings instance. </summary>

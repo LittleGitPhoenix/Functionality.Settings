@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ___
 
+## 2.1.0 (2022-01-??)
+
+### Added
+
+- The project now natively supports **.NET 6**.
+
+### Changed
+
+- The generic type of the `Reload` extension method of an `ISettings` instance now automatically matches the type of the instance. Therefore will no longer throw an `SettingsTypeMismatchException` if those types mismatch.
+
+### Deprecated
+
+- The `SettingsTypeMismatchException` has been marked obsolete as it is no longer used.
+___
+
 ## 2.0.0 (2021-11-01)
 
 ### Changed

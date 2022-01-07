@@ -24,8 +24,9 @@ namespace Settings.Test
 		[Test]
 		public void Invoking_Reload_With_Different_Types_Throws()
 		{
-			var settings = new Settings();
-			Assert.Throws<SettingsTypeMismatchException>(() => settings.Reload<OtherSettings>());
+			//var settings = new Settings();
+			//Assert.Throws<SettingsTypeMismatchException>(() => settings.Reload<OtherSettings>());
+			Assert.Pass("This test is superfluous, as the 'Reload' functions generic type now always matches the extended settings type. This leads to design time error now which prevents compilation.");
 		}
 
 		[Test]
