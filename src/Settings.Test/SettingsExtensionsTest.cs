@@ -1,4 +1,4 @@
-using Moq;
+﻿using Moq;
 using NUnit.Framework;
 using Phoenix.Functionality.Settings;
 
@@ -6,12 +6,16 @@ namespace Settings.Test;
 
 public class SettingsExtensionsTest
 {
+	#region Setup
+
 	[SetUp]
-	public void Setup()
+	public void BeforeEachTest()
 	{
 		SettingsExtensions.Cache.Clear();
 	}
-		
+
+	#endregion
+
 	#region Reload
 
 	class Settings : ISettings { }
@@ -38,7 +42,7 @@ public class SettingsExtensionsTest
 	{
 		var settingsManagerMock = new Mock<ISettingsManager>();
 		settingsManagerMock
-			.Setup(manager => manager.Load<Settings>(true, It.IsAny<bool>()))
+			.Setup(manager => manager.Load<Settings>(true, It.IsAny<bool>(), It.IsAny<bool>()))
 			.Returns(() => default)
 			.Verifiable()
 			;
@@ -48,10 +52,10 @@ public class SettingsExtensionsTest
 		settings.InitializeExtensionMethods(settingsManager);
 
 		settings.Reload<Settings>(false);
-		settingsManagerMock.Verify(manager => manager.Load<Settings>(true, false), Times.Once());
+		settingsManagerMock.Verify(manager => manager.Load<Settings>(true, false, It.IsAny<bool>()), Times.Once());
 			
 		settings.Reload<Settings>(true);
-		settingsManagerMock.Verify(manager => manager.Load<Settings>(true, true), Times.Once());
+		settingsManagerMock.Verify(manager => manager.Load<Settings>(true, true, It.IsAny<bool>()), Times.Once());
 	}
 
 	#endregion

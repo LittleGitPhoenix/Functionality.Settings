@@ -291,7 +291,7 @@ public class EncryptSettingsManagerTest
 		// Arrange
 		var underlyingSettingsManager = _fixture.Create<Mock<ISettingsManager>>().Object;
 		Mock.Get(underlyingSettingsManager)
-			.Setup(mock => mock.Load<StringSettings>(It.IsAny<bool>(), It.IsAny<bool>()))
+			.Setup(mock => mock.Load<StringSettings>(It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
 			.Returns
 			(
 				new StringSettings()
@@ -314,7 +314,7 @@ public class EncryptSettingsManagerTest
 		// Arrange
 		var underlyingSettingsManager = _fixture.Create<Mock<ISettingsManager>>().Object;
 		Mock.Get(underlyingSettingsManager)
-			.Setup(mock => mock.Load<StringSettings>(It.IsAny<bool>(), It.IsAny<bool>()))
+			.Setup(mock => mock.Load<StringSettings>(It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
 			.Returns
 			(
 				new StringSettings()

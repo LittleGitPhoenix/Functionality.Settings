@@ -5,17 +5,18 @@ ___
 
 ## Functionality
 
-- [ ] Add some kind of version management to the settings instances, so that upgrades can be performed.
-> Preferably via an interface like **IUpgradeableSettings**. This could provide a method **Loaded(ISettings settings, ExpandoObject rawData)**. Later parameter is the raw serialized settings object. With this any kind of migration can be applied to the current instance.
+- [ ] Create a **SQLite** sink.
+- [x] ~~Separate storage from serialization.~~
+- [x] ~~Add some kind of version management to the settings instances, so that upgrades can be performed.~~
 - [x] ~~Make settings save-able via extension methods of the **_ISettings_** interface.~~
 
 ___
 
 ## Unit Tests
 
-- Add unit tests for the custom converters.
+- ~~Add unit tests for the custom converters.~~
 	- [x] ~~FileSystemInfoConverter~~
-	- [ ] IpAddressConverter
-	- [ ] RegexConverter
+	- [x] ~~IpAddressConverter~~
+	- [x] ~~RegexConverter~~
 	- [x] ~~TimeSpanConverter~~
 

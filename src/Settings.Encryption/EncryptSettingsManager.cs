@@ -55,10 +55,10 @@ class EncryptSettingsManager : ISettingsManager
 	#region Implementation of ISettingsManager
 
 	/// <inheritdoc />
-	public TSettings Load<TSettings>(bool bypassCache = false, bool preventUpdate = false)
+	public TSettings Load<TSettings>(bool bypassCache = false, bool preventUpdate = false, bool throwIfNoDataIsAvailable = false)
 		where TSettings : class, ISettings, new()
 	{
-		var settings = _underlyingSettingsManager.Load<TSettings>(bypassCache, preventUpdate);
+		var settings = _underlyingSettingsManager.Load<TSettings>(bypassCache, preventUpdate, throwIfNoDataIsAvailable);
 		var needsEncryption = this.DecryptProperties(settings);
 		if (needsEncryption) this.Save(settings);
 		return settings;

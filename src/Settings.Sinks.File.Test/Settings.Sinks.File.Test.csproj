@@ -17,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Settings.Encryption\Settings.Encryption.csproj" />
+	  <ProjectReference Include="..\Settings.Sinks.File\Settings.Sinks.File.csproj" />
 	</ItemGroup>
 
 </Project>

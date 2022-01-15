@@ -15,15 +15,19 @@ public interface ISettingsCache
 	/// </summary>
 	/// <returns> A collection of all cached <see cref="ISettings"/> instances. </returns>
 	ICollection<ISettings> GetAllCachedSettings();
-	
+
 	/// <summary>
 	/// Tries to retrieve the settings of type <typeparamref name="TSettings"/>.
 	/// </summary>
 	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
 	/// <param name="settings"> The settings instance. </param>
 	/// <returns> <c>True</c> if the settings where retrieved from cache, otherwise <c>False</c>. </returns>
+#if NETFRAMEWORK || NETSTANDARD2_0
 	bool TryGet<TSettings>(out TSettings? settings) where TSettings : class, ISettings;
-		
+#else
+	bool TryGet<TSettings>([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TSettings? settings) where TSettings : class, ISettings;
+#endif
+
 	/// <summary>
 	/// Adds or updates the settings of type <typeparamref name="TSettings"/> to the cache.
 	/// </summary>
