@@ -2,7 +2,6 @@
 //! This file is subject to the terms and conditions defined in file 'LICENSE.md', which is part of this source code package.
 #endregion
 
-
 using Phoenix.Functionality.Settings.Cache;
 
 namespace Phoenix.Functionality.Settings;
@@ -75,7 +74,11 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 		lock (_lock)
 		{
 			// Check the cache for an existing instance and imitatively return it.
+#if NETFRAMEWORK || NETSTANDARD2_0
+			if (!bypassCache && _cache.TryGet<TSettings>(out var settings) && settings is not null) return settings;
+#else
 			if (!bypassCache && _cache.TryGet<TSettings>(out var settings)) return settings;
+#endif
 
 			// Get the data.
 			var settingsData = _sink.Retrieve<TSettings>(throwIfNoDataIsAvailable);

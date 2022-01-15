@@ -2,7 +2,6 @@
 //! This file is subject to the terms and conditions defined in file 'LICENSE.md', which is part of this source code package.
 #endregion
 
-
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -82,7 +81,7 @@ public static class SettingsExtensions
 	}
 
 	/// <inheritdoc cref="ISettingsManager.Save{TSettings}"/>
-	/// <exception cref="MissingSettingsManagerException"> Thrown if the <paramref name="settings"/> instance is not linked to a cached <see cref="ISettingsManager"/>. Use the hidden <see cref="InitializeExtensionMethods{TSettings}"/> method for initialization. </exception>
+	/// <exception cref="MissingSettingsManagerException"> Thrown if the <paramref name="settings"/> instance is not linked to a cached <see cref="ISettingsManager"/>. Use the hidden <see cref="InitializeExtensionMethods"/> method for initialization. </exception>
 	/// <remarks> This extension method will only work for <see cref="ISettings"/> instances that called the <see cref="InitializeExtensionMethods"/> method so that the <see cref="ISettingsManager"/> that was used to load the instance has been cached internally and can be used for saving. </remarks>
 	public static void Save(this ISettings settings, bool createBackup = default)
 	{

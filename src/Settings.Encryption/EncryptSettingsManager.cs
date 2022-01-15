@@ -2,7 +2,6 @@
 //! This file is subject to the terms and conditions defined in file 'LICENSE.md', which is part of this source code package.
 #endregion
 
-
 using System.Collections;
 using System.Reflection;
 
@@ -89,7 +88,7 @@ class EncryptSettingsManager : ISettingsManager
 		{
 			if (String.IsNullOrWhiteSpace(stringValue)) continue;
 			var decryptedValue = _encryptionHelper.Decrypt(stringValue);
-			allPropertiesAreEncrypted &= !stringValue.Equals(decryptedValue, StringComparison.OrdinalIgnoreCase);
+			allPropertiesAreEncrypted &= !String.Equals(stringValue, decryptedValue, StringComparison.OrdinalIgnoreCase);
 			if (stringValue != decryptedValue) setter.Invoke(decryptedValue);
 		}
 		return !allPropertiesAreEncrypted;
@@ -275,26 +274,28 @@ class EncryptSettingsManager : ISettingsManager
 		
 	private static bool IsAttributed(PropertyInfo propertyInfo)
 	{
-		if (propertyInfo.GetCustomAttribute<EncryptAttribute>() is null) return false;
-		return true;
+		return propertyInfo.GetCustomAttribute<EncryptAttribute>() switch
+		{
+			null => false,
+			_ => true
+		};
 	}
 		
 	private static bool IsSupported(Type propertyType)
 	{
-		if (propertyType != typeof(string) && propertyType != typeof(object)) return false;
-		return true;
+		return propertyType == typeof(string) || propertyType == typeof(object);
 	}
 
 	internal static bool ShouldNotFollow(PropertyInfo propertyInfo)
 	{
-		if (propertyInfo.GetCustomAttribute<EncryptDoNotFollowAttribute>() is not null) return true; // Manual specification overrules the automatic mechanism.
-		return false;
+		// Manual specification overrules the automatic mechanism.
+		return propertyInfo.GetCustomAttribute<EncryptDoNotFollowAttribute>() is not null;
 	}
 
 	internal static bool ShouldFollow(PropertyInfo propertyInfo)
 	{
-		if (propertyInfo.GetCustomAttribute<EncryptForceFollowAttribute>() is not null) return true; // Manual specification overrules the automatic mechanism.
-		return false;
+		// Manual specification overrules the automatic mechanism.
+		return propertyInfo.GetCustomAttribute<EncryptForceFollowAttribute>() is not null;
 	}
 
 	internal static bool IsNested(Type type)
@@ -309,10 +310,10 @@ class EncryptSettingsManager : ISettingsManager
 		if (type.Module.ScopeName == "CommonLanguageRuntimeLibrary") return false;
 
 		// This filters build-in types for .Net.
-		/*!
-		Unfortunately the 'type.Module.FullyQualifiedName' is not set when running an application published as a single-file executable. Same goes for 'type.Assembly.Location'.
-		Therefor, as to prevent all properties being treated as nested when running single-file executables, the whole namespace 'System' is excluded. This my cause problems,
-		if custom code uses this namespace too.
+		/*
+		! Unfortunately the 'type.Module.FullyQualifiedName' is not set when running an application published as a single-file executable. Same goes for 'type.Assembly.Location'.
+		! Therefor, as to prevent all properties being treated as nested when running single-file executables, the whole namespace 'System' is excluded. This my cause problems,
+		! if custom code uses this namespace too.
 		*/
 		//if (type.Module.ScopeName.StartsWith("System.") && type.Module.FullyQualifiedName.Contains("dotnet")) return false;
 		if (type.Module.ScopeName.StartsWith("System.")) return false;

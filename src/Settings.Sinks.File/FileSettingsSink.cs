@@ -2,7 +2,6 @@
 //! This file is subject to the terms and conditions defined in file 'LICENSE.md', which is part of this source code package.
 #endregion
 
-
 namespace Phoenix.Functionality.Settings.Sinks.File;
 
 /// <summary>
@@ -63,7 +62,6 @@ public class FileSettingsSink : ISettingsSink<string>
 		_baseDirectory = baseDirectory ?? new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), DefaultSettingsFolderName));
 
 		// Initialize fields.
-
 
 		// Create the settings base folder.
 		_baseDirectory.Create();

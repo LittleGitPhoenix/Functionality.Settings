@@ -60,7 +60,7 @@ public class EncryptionHelperTest
 		var encrypted = _encryptionHelper.Encrypt(unencrypted);
 
 		// Assert
-		Assert.True(encrypted.Contains(EncryptionHelper.Marker));
+		Assert.True(encrypted?.Contains(EncryptionHelper.Marker) ?? false);
 	}
 
 	[Test]

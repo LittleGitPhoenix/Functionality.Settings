@@ -2,7 +2,6 @@
 //! This file is subject to the terms and conditions defined in file 'LICENSE.md', which is part of this source code package.
 #endregion
 
-
 using System.Collections.Concurrent;
 
 namespace Phoenix.Functionality.Settings.Cache;
@@ -65,7 +64,11 @@ public class WeakSettingsCache : ISettingsCache
 	}
 
 	/// <inheritdoc />
+#if NETFRAMEWORK || NETSTANDARD2_0
 	public bool TryGet<TSettings>(out TSettings? settings) where TSettings : class, ISettings
+#else
+	public bool TryGet<TSettings>([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TSettings? settings) where TSettings : class, ISettings
+#endif
 	{
 		var key = WeakSettingsCache.GetKey<TSettings>();
 		object? cachedSettings = default;

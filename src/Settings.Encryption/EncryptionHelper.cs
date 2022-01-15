@@ -2,7 +2,6 @@
 //! This file is subject to the terms and conditions defined in file 'LICENSE.md', which is part of this source code package.
 #endregion
 
-
 using System.Security.Cryptography;
 
 namespace Phoenix.Functionality.Settings.Encryption;
@@ -72,7 +71,7 @@ class EncryptionHelper
 
 	private static byte[] Encrypt(string? text, byte[] key, byte[] vector)
 	{
-		using var aes = new AesManaged();
+		using var aes = Aes.Create();
 		var encryptor = aes.CreateEncryptor(key, vector);
 		using var memoryStream = new MemoryStream();
 		using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
@@ -100,7 +99,7 @@ class EncryptionHelper
 
 	private static string Decrypt(byte[] encryptedData, byte[] key, byte[] vector)
 	{
-		using var aes = new AesManaged();
+		using var aes = Aes.Create();
 		ICryptoTransform decryptor = aes.CreateDecryptor(key, vector);
 		using var memoryStream = new MemoryStream(encryptedData);
 		using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
