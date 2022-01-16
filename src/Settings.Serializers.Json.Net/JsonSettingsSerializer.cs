@@ -3,6 +3,7 @@
 #endregion
 
 using System.Dynamic;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace Phoenix.Functionality.Settings.Serializers.Json.Net;
@@ -54,6 +55,12 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 	/// <summary>
 	/// Constructor
 	/// </summary>
+	public JsonSettingsSerializer()
+		: this(DefaultJsonSerializerOptions) { }
+
+	/// <summary>
+	/// Constructor
+	/// </summary>
 	/// <param name="customJsonConverters"> An optional collection of custom <see cref="System.Text.Json.Serialization.JsonConverter"/>s. </param>
 	public JsonSettingsSerializer(params System.Text.Json.Serialization.JsonConverter[] customJsonConverters)
 		: this(DefaultJsonSerializerOptions, customJsonConverters) { }
@@ -77,18 +84,23 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 	#region Methods
 
 	/// <inheritdoc />
-	public TSettings? Deserialize<TSettings>(string settingsData, out ExpandoObject? rawData) where TSettings : class, ISettings
+	public TSettings Deserialize<TSettings>(string settingsData, out ExpandoObject? rawData) where TSettings : class, ISettings
 	{
 		try
 		{
 			rawData = null;
-			if (String.IsNullOrWhiteSpace(settingsData)) return null;
+			if (String.IsNullOrWhiteSpace(settingsData)) throw new SettingsLoadException("Cannot de-serialize empty settings data.");
 
 			// If it is necessary get the raw data as expando object.
 			if (typeof(ISettingsLayoutChangedNotification).IsAssignableFrom(typeof(TSettings))) rawData = JsonSerializer.Deserialize<ExpandoObject>(settingsData, _jsonSerializerOptions);
 
 			// Deserialize into the real instance.
-			return JsonSerializer.Deserialize<TSettings>(settingsData, _jsonSerializerOptions);
+			var settings = this.Deserialize<TSettings>(settingsData);
+			return settings ?? throw new SettingsLoadException("The de-serialized settings data yielded null.");
+		}
+		catch (SettingsLoadException)
+		{
+			throw;
 		}
 		catch (Exception ex)
 		{
@@ -141,6 +153,9 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 		customJsonConverters.Add(customJsonConverter);
 		return true;
 	}
+
+	internal virtual TSettings? Deserialize<TSettings>(string settingsData)
+		=> JsonSerializer.Deserialize<TSettings>(settingsData, _jsonSerializerOptions);
 
 	private static async Task<byte[]> ConvertJsonDocumentToData(JsonDocument document)
 	{

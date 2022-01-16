@@ -84,6 +84,10 @@ public class FileSettingsSink : ISettingsSink<string>
 			var content = reader.ReadToEnd();
 			return content;
 		}
+		catch (SettingsLoadException)
+		{
+			throw;
+		}
 		catch (Exception ex)
 		{
 			throw new SettingsLoadException($"Could not load the settings data from file '{fullSettingsFileName}'. See the inner exception for further details.", ex);

@@ -144,7 +144,8 @@ public class SettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Load_Creates_And_Saves_New_Instance_If_Serialization_Fails()
+	[Ignore("The manger no longer creates a default instance if deserialization fails. Instead it throws.")]
+	public void Check_Load_Creates_And_Saves_New_Instance_If_Deserialization_Fails()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -187,6 +188,44 @@ public class SettingsManagerTest
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Once);
 		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
+	}
+
+	[Test]
+	public void Check_Load_Throws_If_Deserialization_Fails()
+	{
+		// Arrange
+		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
+		Mock.Get(sink)
+			.Setup(mock => mock.Retrieve<Settings>(It.IsAny<bool>()))
+			.Returns(String.Empty) //! This needs to return at least a string instance.
+			.Verifiable()
+			;
+		_fixture.Inject(sink);
+		var serializer = _fixture.Create<Mock<ISettingsSerializer<string>>>().Object;
+		Mock.Get(serializer)
+			.Setup(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny))
+			.Throws(_fixture.Create<SettingsLoadException>()) //! This needs to throw.
+			.Verifiable()
+			;
+		_fixture.Inject(serializer);
+		var manager = _fixture.Create<Mock<SettingsManager<string>>>().Object;
+		Mock.Get(manager)
+			.Setup(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()))
+			.Verifiable()
+			;
+		Mock.Get(manager)
+			.Setup(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()))
+			.Verifiable()
+			;
+
+		// Act + Assert
+		Assert.Catch<SettingsLoadException>(() => manager.Load<Settings>());
+
+		// Assert
+		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(It.IsAny<bool>()), Times.Once);
+		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
+		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
+		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Never);
 	}
 
 	[Test]

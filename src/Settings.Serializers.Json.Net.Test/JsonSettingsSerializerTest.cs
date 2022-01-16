@@ -1,6 +1,7 @@
 ﻿using System.Dynamic;
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using Moq;
 using NUnit.Framework;
 using Phoenix.Functionality.Settings;
 using Phoenix.Functionality.Settings.Serializers.Json.Net;
@@ -109,6 +110,40 @@ public class JsonSettingsSerializerTest
 
 		// Act + Assert
 		Assert.Catch<SettingsLoadException>(() => serializer.Deserialize<Settings>("This is not a valid JSON string.", out _));
+	}
+
+	/// <summary>
+	/// Checks that a <see cref="SettingsLoadException"/> is thrown if the settings data is empty.
+	/// </summary>
+	[Test]
+	public void Check_Deserialization_Throws_For_Empty_Data()
+	{
+		// Arrange
+		var serializer = new JsonSettingsSerializer(MinimizedJsonSerializerOptions);
+
+		// Act + Assert
+		Assert.Catch<SettingsLoadException>(() => serializer.Deserialize<Settings>(String.Empty, out _));
+	}
+
+	/// <summary>
+	/// Checks that a <see cref="SettingsLoadException"/> is thrown if the .NET deserializer returned null.
+	/// </summary>
+	[Test]
+	public void Check_Deserialization_Throws_If_Null_Is_Returned()
+	{
+		// Arrange
+		_fixture.Inject(MinimizedJsonSerializerOptions);
+		var serializerMock = _fixture.Create<Mock<JsonSettingsSerializer>>();
+		serializerMock
+			.Setup(mock => mock.Deserialize<ISettings>(It.IsAny<string>()))
+			.Returns((Settings) null)
+			.Verifiable()
+			;
+		var serializer = serializerMock.Object;
+
+		// Act + Assert
+		Assert.Catch<SettingsLoadException>(() => serializer.Deserialize<Settings>("{\"Valid\":true}", out _));
+		serializerMock.Verify(mock => mock.Deserialize<ISettings>(It.IsAny<string>()), Times.Once);
 	}
 
 	/// <summary> Checks if an <see cref="ISettings"/> instance is identical to its data representation. </summary>

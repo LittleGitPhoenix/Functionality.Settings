@@ -93,16 +93,7 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 			{
 				// Convert the data into a settings instance.
 				settings = _serializer.Deserialize<TSettings>(settingsData, out var rawData);
-
-				//? Should a default instance be created, if the existing data could not be serialized?
-				//* It seems reasonable, to throw the exception instead of using default values.
-				// If the data could not be serialized, then create a default instance.
-				if (settings is null)
-				{
-					settings = this.GetAndSaveDefaultInstance<TSettings>(preventUpdate);
-				}
-				//else if (!preventUpdate && !_serializer.AreIdentical(settings, settingsData))
-				else if (!preventUpdate)
+				if (!preventUpdate)
 				{
 					// Check if the settings instance differs from the data, so that the data can be updated.
 					var areIdentical = false;

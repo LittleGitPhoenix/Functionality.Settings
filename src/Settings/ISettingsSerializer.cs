@@ -27,7 +27,7 @@ public interface ISettingsSerializer<TSettingsData> : ISettingsSerializer
 	/// <param name="rawData"> This should be the parsed raw data of <typeparamref name="TSettingsData"/>. It should only be filled if <typeparamref name="TSettings"/> implements <see cref="ISettingsLayoutChangedNotification"/>. </param>
 	/// <returns> A new settings instance. </returns>
 	/// <exception cref="SettingsLoadException"> Thrown if <paramref name="settingsData"/> could not be deserialized. </exception>
-	TSettings? Deserialize<TSettings>(TSettingsData settingsData, out ExpandoObject? rawData) where TSettings : class, ISettings;
+	TSettings Deserialize<TSettings>(TSettingsData settingsData, out ExpandoObject? rawData) where TSettings : class, ISettings;
 
 	/// <summary>
 	/// Serializes <paramref name="settings"/> into <typeparamref name="TSettingsData"/>.
