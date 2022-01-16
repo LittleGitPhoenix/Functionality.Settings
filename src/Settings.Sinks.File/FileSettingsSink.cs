@@ -74,10 +74,11 @@ public class FileSettingsSink : ISettingsSink<string>
 	/// <inheritdoc />
 	public string? Retrieve<TSettings>(bool throwIfNoDataIsAvailable = false) where TSettings : ISettings
 	{
-		var settingsFile = this.GetSettingsFile(this.GetSettingsFileNameWithoutExtension<TSettings>(), _baseDirectory);
-		if (!settingsFile.Exists) return throwIfNoDataIsAvailable ? throw new SettingsLoadNoDataAvailableException() : null;
+		var fullSettingsFileName = this.BuildFullSettingsFileName<TSettings>(_baseDirectory);
 		try
 		{
+			var settingsFile = this.GetSettingsFile(fullSettingsFileName);
+			if (!settingsFile.Exists) return throwIfNoDataIsAvailable ? throw new SettingsLoadNoDataAvailableException() : null;
 			using var stream = settingsFile.OpenRead();
 			using var reader = new StreamReader(stream);
 			var content = reader.ReadToEnd();
@@ -85,16 +86,18 @@ public class FileSettingsSink : ISettingsSink<string>
 		}
 		catch (Exception ex)
 		{
-			throw new SettingsLoadException($"Could not load the settings data from file '{settingsFile.FullName}'. See the inner exception for further details.", ex);
+			throw new SettingsLoadException($"Could not load the settings data from file '{fullSettingsFileName}'. See the inner exception for further details.", ex);
 		}
 	}
 
 	/// <inheritdoc />
 	public void Store<TSettings>(string settingsData, bool createBackup = default) where TSettings : ISettings
 	{
-		var settingsFile = this.GetSettingsFile(this.GetSettingsFileNameWithoutExtension<TSettings>(), _baseDirectory);
+		var fullSettingsFileName = this.BuildFullSettingsFileName<TSettings>(_baseDirectory);
 		try
 		{
+			var settingsFile = this.GetSettingsFile(fullSettingsFileName);
+			
 			// Create a backup.
 			if (createBackup) this.CreateBackup(settingsFile);
 
@@ -114,23 +117,34 @@ public class FileSettingsSink : ISettingsSink<string>
 		}
 		catch (Exception ex)
 		{
-			throw new SettingsSaveException($"Could save settings data to file '{settingsFile.FullName}'. See the inner exception for further details.", ex);
+			throw new SettingsSaveException($"Could save settings data to file '{fullSettingsFileName}'. See the inner exception for further details.", ex);
 		}
 	}
 
 	#region Helper
 
 	/// <summary>
+	/// Builds the full name of the settings file (this includes the path).
+	/// </summary>
+	/// <typeparam name="TSettings"> The type of the settings. </typeparam>
+	/// <param name="settingsDirectory"> The base directory of the settings. </param>
+	/// <returns> The file name. </returns>
+	private string BuildFullSettingsFileName<TSettings>(DirectoryInfo settingsDirectory) where TSettings : ISettings
+	{
+		var name = this.GetSettingsFileNameWithoutExtension<TSettings>();
+		var extension = _fileExtension;
+		var settingsFileName = $"{name}{extension}";
+		var fullSettingsFileName = Path.Combine(settingsDirectory.FullName, settingsFileName);
+		return fullSettingsFileName;
+	}
+
+	/// <summary>
 	/// Gets a reference to the settings file.
 	/// </summary>
-	/// <param name="settingsName"> The name of the settings file. </param>
-	/// <param name="settingsDirectory"> The base directory of the settings. </param>
+	/// <param name="fullSettingsFileName"> The full name of the settings file. </param>
 	/// <returns> A <see cref="FileInfo"/> reference to the settings file. </returns>
-	private FileInfo GetSettingsFile(string settingsName, DirectoryInfo settingsDirectory)
-	{
-		var fileName = $"{settingsName}{_fileExtension}";
-		return new FileInfo(Path.Combine(settingsDirectory.FullName, fileName));
-	}
+	private FileInfo GetSettingsFile(string fullSettingsFileName)
+		=> new FileInfo(fullSettingsFileName);
 
 	/// <summary>
 	/// Deletes the <paramref name="settingsFile"/> if it exists.

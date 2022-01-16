@@ -82,6 +82,8 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 
 			// Get the data.
 			var settingsData = _sink.Retrieve<TSettings>(throwIfNoDataIsAvailable);
+			//? Should the sink automatically create a default instance if nothing is available and NO error occurred?
+			//* Could be better and seems to follow separation of concerns.
 			if (settingsData is null)
 			{
 				// Create a new settings instance.
@@ -92,6 +94,8 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 				// Convert the data into a settings instance.
 				settings = _serializer.Deserialize<TSettings>(settingsData, out var rawData);
 
+				//? Should a default instance be created, if the existing data could not be serialized?
+				//* It seems reasonable, to throw the exception instead of using default values.
 				// If the data could not be serialized, then create a default instance.
 				if (settings is null)
 				{
@@ -173,11 +177,7 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 	/// </summary>
 	/// <typeparam name="TSettings"> The settings type. </typeparam>
 	/// <returns> A new instance of <typeparamref name="TSettings"/>. </returns>
-	private static TSettings GetDefaultInstance<TSettings>() where TSettings : class, ISettings, new()
-	{
-		// Create a default instance.
-		return new TSettings();
-	}
+	private static TSettings GetDefaultInstance<TSettings>() where TSettings : class, ISettings, new() => new();
 
 	#endregion
 
