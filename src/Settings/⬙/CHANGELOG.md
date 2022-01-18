@@ -16,6 +16,7 @@ Version **3.x** introduces a new concept on settings handling and made a breakin
 ### Changed
 
 - The former `SettingsFileNameAttribute` has been renamed to `SettingsNameAttribute`.
+- `GetSettingsFileNameWithoutExtension` has been renamed to `GetSettingsName` and is now an extension method of `ISettingsSink` instead of `ISettingsManager`.
 
 ### Removed
 

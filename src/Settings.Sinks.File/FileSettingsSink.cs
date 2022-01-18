@@ -135,7 +135,7 @@ public class FileSettingsSink : ISettingsSink<string>
 	/// <returns> The file name. </returns>
 	private string BuildFullSettingsFileName<TSettings>(DirectoryInfo settingsDirectory) where TSettings : ISettings
 	{
-		var name = this.GetSettingsFileNameWithoutExtension<TSettings>();
+		var name = this.GetSettingsName<TSettings>();
 		var extension = _fileExtension;
 		var settingsFileName = $"{name}{extension}";
 		var fullSettingsFileName = Path.Combine(settingsDirectory.FullName, settingsFileName);

@@ -43,7 +43,7 @@ public class SettingsSinkExtensionsTest
 		var sink = _fixture.Create<ISettingsSink>();
 
 		// Act
-		var settingsFileName = sink.GetSettingsFileNameWithoutExtension<UnnamedSettings>();
+		var settingsFileName = sink.GetSettingsName<UnnamedSettings>();
 
 		// Assert
 		Assert.AreEqual(targetName, settingsFileName);
@@ -57,7 +57,7 @@ public class SettingsSinkExtensionsTest
 		var sink = _fixture.Create<ISettingsSink>();
 
 		// Act
-		var settingsFileName = sink.GetSettingsFileNameWithoutExtension<NamedSettings>();
+		var settingsFileName = sink.GetSettingsName<NamedSettings>();
 
 		// Assert
 		Assert.AreEqual(targetName, settingsFileName);
