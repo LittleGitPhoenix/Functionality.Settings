@@ -21,10 +21,9 @@ public interface ISettingsSink<TSettingsData> : ISettingsSink
 	/// Retrieves the settings data from the persistent storage.
 	/// </summary>
 	/// <typeparam name="TSettings"> The type of the settings to retrieve. </typeparam>
-	/// <param name="throwIfNoDataIsAvailable"> Should a <see cref="SettingsLoadNoDataAvailableException"/> be thrown, if no settings data is available. Default is false, in which case null should be returned. </param>
 	/// <returns> The settings data or null. </returns>
 	/// <exception cref="SettingsLoadException"> May be thrown if the settings data could not be retrieved. </exception>
-	TSettingsData? Retrieve<TSettings>(bool throwIfNoDataIsAvailable = false) where TSettings : ISettings;
+	TSettingsData? Retrieve<TSettings>() where TSettings : ISettings;
 
 	/// <summary>
 	/// Stores <paramref name="settingsData"/> in the the persistent storage.

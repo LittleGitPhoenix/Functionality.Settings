@@ -27,15 +27,6 @@ public class SettingsLoadException : SettingsException
 }
 
 /// <summary>
-/// Special exception used when no settings data could be found.
-/// </summary>
-public sealed class SettingsLoadNoDataAvailableException : SettingsLoadException
-{
-	/// <inheritdoc />
-	public SettingsLoadNoDataAvailableException(string? message = null) : base(message) { }
-}
-
-/// <summary>
 /// Base exception used when saving settings fails (e.g. <see cref="ISettingsManager.Save{TSettings}"/>).
 /// </summary>
 public class SettingsSaveException : SettingsException

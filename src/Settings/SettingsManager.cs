@@ -68,7 +68,7 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 	#region Methods
 
 	/// <inheritdoc />
-	public TSettings Load<TSettings>(bool bypassCache = false, bool preventUpdate = false, bool throwIfNoDataIsAvailable = false)
+	public TSettings Load<TSettings>(bool bypassCache = false, bool preventCreation = false, bool preventUpdate = false)
 		where TSettings : class, ISettings, new()
 	{
 		lock (_lock)
@@ -81,13 +81,11 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 #endif
 
 			// Get the data.
-			var settingsData = _sink.Retrieve<TSettings>(throwIfNoDataIsAvailable);
-			//? Should the sink automatically create a default instance if nothing is available and NO error occurred?
-			//* Could be better and seems to follow separation of concerns.
+			var settingsData = _sink.Retrieve<TSettings>();
 			if (settingsData is null)
 			{
-				// Create a new settings instance.
-				settings = this.GetAndSaveDefaultInstance<TSettings>(preventUpdate);
+				// Create a new settings instance if possible.
+				settings = preventCreation ? throw new SettingsLoadException() : this.GetAndSaveDefaultInstance<TSettings>(preventUpdate);
 			}
 			else
 			{

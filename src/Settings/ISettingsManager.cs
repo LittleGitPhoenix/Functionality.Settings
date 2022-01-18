@@ -31,12 +31,12 @@ public interface ISettingsManager
 	/// Loads the settings of type <typeparamref name="TSettings"/>.
 	/// </summary>
 	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
-	/// <param name="bypassCache"> In prevents the <see cref="ISettingsManager"/> to use its internal <see cref="ISettingsCache"/> when loading settings. </param>
-	/// <param name="preventUpdate"> This prevents the <see cref="ISettingsManager"/> from updating the underlying data source in case the settings instance differs from it. </param>
-	/// <param name="throwIfNoDataIsAvailable"> Should a <see cref="SettingsLoadNoDataAvailableException"/> be thrown, if no settings data is available. </param>
+	/// <param name="bypassCache"> In prevents the <see cref="ISettingsManager"/> to use its internal <see cref="ISettingsCache"/> when loading settings. Default is false. </param>
+	/// <param name="preventCreation"> This prevents the <see cref="ISettingsManager"/> from creating and saving a default instance of <typeparamref name="TSettings"/> if no underlying settings data is available. Default is false. </param>
+	/// <param name="preventUpdate"> This prevents the <see cref="ISettingsManager"/> from updating the underlying data source in case the settings instance differs from it. Default is false. </param>
 	/// <returns> A new instance of <typeparamref name="TSettings"/>. </returns>
 	/// <exception cref="SettingsLoadException"> May be thrown if the settings data could not be loaded. </exception>
-	TSettings Load<TSettings>(bool bypassCache = false, bool preventUpdate = false, bool throwIfNoDataIsAvailable = false) where TSettings : class, ISettings, new();
+	TSettings Load<TSettings>(bool bypassCache = false, bool preventCreation = false, bool preventUpdate = false) where TSettings : class, ISettings, new();
 
 	/// <summary>
 	/// Saves the settings.

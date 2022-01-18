@@ -72,13 +72,13 @@ public class FileSettingsSink : ISettingsSink<string>
 	#region Methods
 
 	/// <inheritdoc />
-	public string? Retrieve<TSettings>(bool throwIfNoDataIsAvailable = false) where TSettings : ISettings
+	public string? Retrieve<TSettings>() where TSettings : ISettings
 	{
 		var fullSettingsFileName = this.BuildFullSettingsFileName<TSettings>(_baseDirectory);
 		try
 		{
 			var settingsFile = this.GetSettingsFile(fullSettingsFileName);
-			if (!settingsFile.Exists) return throwIfNoDataIsAvailable ? throw new SettingsLoadNoDataAvailableException() : null;
+			if (!settingsFile.Exists) return null;
 			using var stream = settingsFile.OpenRead();
 			using var reader = new StreamReader(stream);
 			var content = reader.ReadToEnd();

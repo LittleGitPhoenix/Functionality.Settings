@@ -54,7 +54,7 @@ public class SettingsManagerTest
 		_fixture.Inject<ISettingsCache>(cache);
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
 		Mock.Get(sink)
-			.Setup(mock => mock.Retrieve<Settings>(It.IsAny<bool>()))
+			.Setup(mock => mock.Retrieve<Settings>())
 			.Verifiable()
 			;
 		_fixture.Inject(sink);
@@ -79,7 +79,7 @@ public class SettingsManagerTest
 
 		// Assert
 		Assert.NotNull(settings);
-		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(It.IsAny<bool>()), Times.Never);
+		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Never);
 		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Never);
@@ -105,13 +105,16 @@ public class SettingsManagerTest
 		Mock.Get(cache).Verify(mock => mock.AddOrUpdate(It.IsAny<Settings>()), Times.Once);
 	}
 
+	/// <summary>
+	/// Checks that the <see cref="SettingsManager{TSettingsData}"/> creates a new settings instance if no data is available.
+	/// </summary>
 	[Test]
 	public void Check_Load_Creates_And_Saves_New_Instance()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
 		Mock.Get(sink)
-			.Setup(mock => mock.Retrieve<Settings>(It.IsAny<bool>()))
+			.Setup(mock => mock.Retrieve<Settings>())
 			.Returns((string) null) //! This needs to return null so that the initial instance is created and saved.
 			.Verifiable()
 			;
@@ -133,13 +136,51 @@ public class SettingsManagerTest
 			;
 
 		// Act
-		var settings = manager.Load<Settings>();
+		var settings = manager.Load<Settings>(preventCreation: false);
 
 		// Assert
 		Assert.NotNull(settings);
-		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(It.IsAny<bool>()), Times.Once);
+		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Once);
+		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Never);
+	}
+
+	/// <summary>
+	/// Checks that the <see cref="SettingsManager{TSettingsData}"/> does not create a new settings instance if no data is available and rather throws an <see cref="SettingsLoadException"/>.
+	/// </summary>
+	[Test]
+	public void Check_Load_Does_Not_Create_And_Save_New_Instance()
+	{
+		// Arrange
+		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
+		Mock.Get(sink)
+			.Setup(mock => mock.Retrieve<Settings>())
+			.Returns((string) null) //! This needs to return null so that the initial instance is created and saved.
+			.Verifiable()
+			;
+		_fixture.Inject(sink);
+		var serializer = _fixture.Create<Mock<ISettingsSerializer<string>>>().Object;
+		Mock.Get(serializer)
+			.Setup(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny))
+			.Verifiable()
+			;
+		_fixture.Inject(serializer);
+		var manager = _fixture.Create<Mock<SettingsManager<string>>>().Object;
+		Mock.Get(manager)
+			.Setup(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()))
+			.Verifiable()
+			;
+		Mock.Get(manager)
+			.Setup(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()))
+			.Verifiable()
+			;
+
+		// Act + Assert
+		Assert.Catch<SettingsLoadException>(() => manager.Load<Settings>(preventCreation: true));
+		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
+		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
+		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Never);
 		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Never);
 	}
 
@@ -150,7 +191,7 @@ public class SettingsManagerTest
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
 		Mock.Get(sink)
-			.Setup(mock => mock.Retrieve<Settings>(It.IsAny<bool>()))
+			.Setup(mock => mock.Retrieve<Settings>())
 			.Returns(String.Empty) //! This needs to return at least a string instance.
 			.Verifiable()
 			;
@@ -184,7 +225,7 @@ public class SettingsManagerTest
 
 		// Assert
 		Assert.NotNull(settings);
-		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(It.IsAny<bool>()), Times.Once);
+		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Once);
 		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
@@ -196,7 +237,7 @@ public class SettingsManagerTest
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
 		Mock.Get(sink)
-			.Setup(mock => mock.Retrieve<Settings>(It.IsAny<bool>()))
+			.Setup(mock => mock.Retrieve<Settings>())
 			.Returns(String.Empty) //! This needs to return at least a string instance.
 			.Verifiable()
 			;
@@ -222,7 +263,7 @@ public class SettingsManagerTest
 		Assert.Catch<SettingsLoadException>(() => manager.Load<Settings>());
 
 		// Assert
-		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(It.IsAny<bool>()), Times.Once);
+		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Never);
@@ -234,7 +275,7 @@ public class SettingsManagerTest
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
 		Mock.Get(sink)
-			.Setup(mock => mock.Retrieve<Settings>(It.IsAny<bool>()))
+			.Setup(mock => mock.Retrieve<Settings>())
 			.Returns(String.Empty) //! This needs to return at least a string instance.
 			.Verifiable()
 			;
@@ -273,7 +314,7 @@ public class SettingsManagerTest
 
 		// Assert
 		Assert.NotNull(settings);
-		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(It.IsAny<bool>()), Times.Once);
+		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Never);
 		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
@@ -286,7 +327,7 @@ public class SettingsManagerTest
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
 		Mock.Get(sink)
-			.Setup(mock => mock.Retrieve<Settings>(It.IsAny<bool>()))
+			.Setup(mock => mock.Retrieve<Settings>())
 			.Returns(String.Empty) //! This needs to return at least a string instance.
 			.Verifiable()
 			;
@@ -325,7 +366,7 @@ public class SettingsManagerTest
 
 		// Assert
 		Assert.NotNull(settings);
-		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(It.IsAny<bool>()), Times.Once);
+		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Once);
 		Mock.Get(serializer).Verify(mock => mock.Deserialize<Settings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
@@ -338,7 +379,7 @@ public class SettingsManagerTest
 		// Arrange
 		var sinkMock = _fixture.Create<Mock<ISettingsSink<string>>>();
 		sinkMock
-			.Setup(mock => mock.Retrieve<ChangeSettings>(It.IsAny<bool>()))
+			.Setup(mock => mock.Retrieve<ChangeSettings>())
 			.Returns(String.Empty)
 			.Verifiable()
 			;
@@ -362,7 +403,7 @@ public class SettingsManagerTest
 
 		// Assert
 		Assert.True(settings.Raised);
-		sinkMock.Verify(mock => mock.Retrieve<ChangeSettings>(It.IsAny<bool>()), Times.Once);
+		sinkMock.Verify(mock => mock.Retrieve<ChangeSettings>(), Times.Once);
 		serializerMock.Verify(mock => mock.Deserialize<ChangeSettings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
 	}
 

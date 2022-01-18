@@ -17,6 +17,8 @@ Version **3.x** introduces a new concept on settings handling and made a breakin
 
 - The former `SettingsFileNameAttribute` has been renamed to `SettingsNameAttribute`.
 - `GetSettingsFileNameWithoutExtension` has been renamed to `GetSettingsName` and is now an extension method of `ISettingsSink` instead of `ISettingsManager`.
+- An `ISettingsManager` can be instructed to not create and save a default `ISettings` instance if no data is available. This behavior can be toggled with the `preventCreation` parameter of the `ISettingsManager.Load` function.
+- If deserializing an `ISettings` instance from existing data fails, then now a `SettingsLoadException` is thrown instead of just using a default instance.
 
 ### Removed
 

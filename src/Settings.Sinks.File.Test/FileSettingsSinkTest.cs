@@ -56,23 +56,12 @@ public class FileSettingsSinkTest
 		var sink = new FileSettingsSink(testDirectory);
 
 		// Act
-		var settingsData = sink.Retrieve<Settings>(throwIfNoDataIsAvailable: false);
+		var settingsData = sink.Retrieve<Settings>();
 
 		// Assert
 		Assert.Null(settingsData);
 	}
-
-	[Test]
-	public void Retrieve_Throws_If_File_Does_Not_Exist()
-	{
-		// Arrange
-		using var testDirectory = new TestDirectory();
-		var sink = new FileSettingsSink(testDirectory);
-
-		// Act + Assert
-		Assert.Catch<SettingsLoadNoDataAvailableException>(() => sink.Retrieve<Settings>(throwIfNoDataIsAvailable: true));
-	}
-
+	
 	[Test]
 	public void Retrieve_Settings_Data_Is_Not_Null_If_File_Exists()
 	{
