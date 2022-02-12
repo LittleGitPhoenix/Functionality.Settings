@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ___
 
-## 3.0.0 (2022-01-??)
+## 3.0.0 (2022-02-12)
 
-Version **3.x** introduces a new concept on settings handling and made a breaking change necessary. More can be found in the [**README.md**](../../../README.md)
+> Version **3.x** introduces a new concept off settings handling and made a breaking change necessary. More can be found in the [**README.md**](../../../README.md)
 
 ### Added
 
