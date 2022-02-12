@@ -2,7 +2,6 @@
 //! This file is subject to the terms and conditions defined in file 'LICENSE.md', which is part of this source code package.
 #endregion
 
-
 namespace Phoenix.Functionality.Settings.Cache;
 
 /// <summary>
@@ -40,7 +39,12 @@ public class NoSettingsCache : ISettingsCache
 	}
 
 	/// <inheritdoc />
+#if NETFRAMEWORK || NETSTANDARD2_0
 	public bool TryGet<TSettings>(out TSettings? settings) where TSettings : class, ISettings
+#else
+	public bool TryGet<TSettings>([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TSettings? settings) where TSettings : class, ISettings
+#endif
+
 	{
 		settings = default;
 		return false;

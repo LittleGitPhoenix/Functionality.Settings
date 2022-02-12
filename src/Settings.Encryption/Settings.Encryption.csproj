@@ -5,9 +5,9 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<RootNamespace>Phoenix.Functionality.Settings.Encryption</RootNamespace>
 		<AssemblyName>Phoenix.Functionality.Settings.Encryption</AssemblyName>
-		<Version>2.3.0</Version>
+		<RootNamespace>Phoenix.Functionality.Settings.Encryption</RootNamespace>
+		<Version>3.0.0</Version>
 		<Authors>Felix Leistner</Authors>
 		<Company>Little Phoenix</Company>
 		<Copyright>2022</Copyright>

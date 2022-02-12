@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoFixture.AutoMoq" Version="4.17.0" />
+		<PackageReference Include="Moq" Version="4.16.1" />
+		<PackageReference Include="NUnit" Version="3.13.2" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.2.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Settings.Encryption\Settings.Encryption.csproj" />
+		<ProjectReference Include="..\Settings.Serializers.Json.Net\Settings.Serializers.Json.Net.csproj" />
+		<ProjectReference Include="..\Settings.Sinks.File\Settings.Sinks.File.csproj" />
+	</ItemGroup>
+
+</Project>

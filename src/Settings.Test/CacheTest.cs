@@ -1,3 +1,5 @@
+using AutoFixture;
+using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using Phoenix.Functionality.Settings;
 using Phoenix.Functionality.Settings.Cache;
@@ -6,6 +8,22 @@ namespace Settings.Test;
 
 public class CacheTest
 {
+	#region Setup
+	
+	[OneTimeSetUp]
+	public void BeforeAllTests() { }
+
+	[SetUp]
+	public void BeforeEachTest() { }
+	
+	[TearDown]
+	public void AfterEachTest() { }
+
+	[OneTimeTearDown]
+	public void AfterAllTest() { }
+
+	#endregion
+
 	#region Data
 
 	class TestSettings : ISettings { }
