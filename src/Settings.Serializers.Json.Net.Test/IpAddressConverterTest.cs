@@ -14,11 +14,20 @@ public class IpAddressConverterTest
 	private IFixture _fixture;
 #pragma warning restore 8618
 
+	[OneTimeSetUp]
+	public void BeforeAllTests() { }
+
 	[SetUp]
 	public void BeforeEachTest()
 	{
 		_fixture = new Fixture().Customize(new AutoMoqCustomization());
 	}
+
+	[TearDown]
+	public void AfterEachTest() { }
+
+	[OneTimeTearDown]
+	public void AfterAllTest() { }
 
 	#endregion
 

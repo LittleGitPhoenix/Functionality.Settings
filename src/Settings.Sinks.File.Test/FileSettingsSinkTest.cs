@@ -15,6 +15,9 @@ public class FileSettingsSinkTest
 	private IFixture _fixture;
 #pragma warning restore 8618
 
+	[OneTimeSetUp]
+	public void BeforeAllTests() { }
+
 	[SetUp]
 	public void BeforeEachTest()
 	{
@@ -35,6 +38,12 @@ public class FileSettingsSinkTest
 		////! This has to be done AFTER the working directory may have been changed.
 		//this.Data = new TestData();
 	}
+
+	[TearDown]
+	public void AfterEachTest() { }
+
+	[OneTimeTearDown]
+	public void AfterAllTest() { }
 
 	#endregion
 

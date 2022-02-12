@@ -10,15 +10,28 @@ namespace Settings.Encryption.Test;
 
 public class EncryptSettingsManagerTest
 {
+	#region Setup
+	
 #pragma warning disable 8618 // → Always initialized in the 'Setup' method before a test is run.
 	private IFixture _fixture;
 #pragma warning restore 8618
+
+	[OneTimeSetUp]
+	public void BeforeAllTests() { }
 
 	[SetUp]
 	public void Setup()
 	{
 		_fixture = new Fixture().Customize(new AutoMoqCustomization());
 	}
+
+	[TearDown]
+	public void AfterEachTest() { }
+
+	[OneTimeTearDown]
+	public void AfterAllTest() { }
+	
+	#endregion
 
 	#region Data
 

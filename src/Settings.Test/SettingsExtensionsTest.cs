@@ -8,11 +8,20 @@ public class SettingsExtensionsTest
 {
 	#region Setup
 
+	[OneTimeSetUp]
+	public void BeforeAllTests() { }
+
 	[SetUp]
 	public void BeforeEachTest()
 	{
 		SettingsExtensions.Cache.Clear();
 	}
+
+	[TearDown]
+	public void AfterEachTest() { }
+
+	[OneTimeTearDown]
+	public void AfterAllTest() { }
 
 	#endregion
 

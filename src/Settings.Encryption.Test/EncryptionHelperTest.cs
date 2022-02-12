@@ -7,17 +7,31 @@ namespace Settings.Encryption.Test;
 
 public class EncryptionHelperTest
 {
+	
+	#region Setup
+
 #pragma warning disable 8618 // → Always initialized in the 'Setup' method before a test is run.
 	private IFixture _fixture;
 #pragma warning restore 8618
 
 	private readonly EncryptionHelper _encryptionHelper = new EncryptionHelper();
 
+	[OneTimeSetUp]
+	public void BeforeAllTests() { }
+
 	[SetUp]
 	public void Setup()
 	{
 		_fixture = new Fixture().Customize(new AutoMoqCustomization());
 	}
+
+	[TearDown]
+	public void AfterEachTest() { }
+
+	[OneTimeTearDown]
+	public void AfterAllTest() { }
+
+	#endregion
 
 	[Test]
 	public void Check_Encryption_And_Decrypt_Are_Identical()
