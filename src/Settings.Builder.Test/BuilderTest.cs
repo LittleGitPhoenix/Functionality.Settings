@@ -35,6 +35,8 @@ public class BuilderTest
 
 	#endregion
 
+	#region Tests
+
 	[Test]
 	public void Check_Build_With_File_Sink_And_Json_Serializer()
 	{
@@ -47,12 +49,12 @@ public class BuilderTest
 			.Create()
 			.UsingFileSink(fileExtension, baseDirectory)
 			.UsingJsonSerializer()
-				.WithFileInfoConverter(baseDirectory)
-				.WithDirectoryInfoConverter(baseDirectory)
-				.WithIpAddressConverter()
-				.WithRegexConverter()
-				.WithTimeSpanConverter()
-				.WithDefaultSerializerOptions()
+			.WithFileInfoConverter(baseDirectory)
+			.WithDirectoryInfoConverter(baseDirectory)
+			.WithIpAddressConverter()
+			.WithRegexConverter()
+			.WithTimeSpanConverter()
+			.WithDefaultSerializerOptions()
 			.UsingWeakCache()
 #if !DEBUG
 			.UsingEncryption()
@@ -63,4 +65,6 @@ public class BuilderTest
 		// Assert
 		Assert.NotNull(settingsManager);
 	}
+
+	#endregion
 }

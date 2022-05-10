@@ -31,6 +31,8 @@ public class IpAddressConverterTest
 
 	#endregion
 
+	#region Tests
+
 	#region Deserialize
 
 	[Test]
@@ -163,6 +165,8 @@ public class IpAddressConverterTest
 		// Assert
 		Assert.AreEqual(nameof(IPAddress.Broadcast), actualHost);
 	}
+
+	#endregion
 
 	#endregion
 }

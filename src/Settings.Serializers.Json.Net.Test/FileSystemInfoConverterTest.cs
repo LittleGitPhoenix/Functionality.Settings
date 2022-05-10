@@ -46,7 +46,9 @@ public class FileSystemInfoConverterTest
 	}
 
 	#endregion
-		
+	
+	#region Tests
+
 	[Test]
 	[TestCase(@"..\Test\some.file")]
 	[TestCase(@"..\..\Test\some.file")]
@@ -195,4 +197,6 @@ public class FileSystemInfoConverterTest
 		Assert.That(settingsString, Contains.Substring(target.Replace(@"\", @"\\")));
 		Assert.That(settingsString.ToLower(), Contains.Substring(nameof(DirectorySettings.Directory).ToLower()));
 	}
+	
+	#endregion
 }

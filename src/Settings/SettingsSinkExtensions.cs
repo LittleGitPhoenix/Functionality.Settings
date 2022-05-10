@@ -28,9 +28,7 @@ public static class SettingsSinkExtensions
 	/// <returns> The name of the settings class. </returns>
 	public static string GetSettingsName(this ISettingsSink sink, Type settingsType)
 	{
-		if (!settingsType.IsClass) throw new ArgumentException($"The passed type '{settingsType}' must be a class.");
 		if (!typeof(ISettings).IsAssignableFrom(settingsType)) throw new ArgumentException($"The passed type '{settingsType}' must implement the interface '{nameof(ISettings)}'.");
-		if (settingsType.GetConstructor(Type.EmptyTypes) == null) throw new ArgumentException($"The passed type '{settingsType}' must provide a parameterless constructor.");
 
 		// First check for the SettingsFileNameAttribute.
 		var settingsFileNameAttribute = settingsType.GetCustomAttribute<SettingsNameAttribute>();

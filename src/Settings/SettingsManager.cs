@@ -86,11 +86,18 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 			{
 				// Create a new settings instance if possible.
 				settings = preventCreation ? throw new SettingsLoadException() : this.GetAndSaveDefaultInstance<TSettings>(preventUpdate);
+
+				// Setup usage of the special extension methods.
+				settings.InitializeExtensionMethods(this);
 			}
 			else
 			{
 				// Convert the data into a settings instance.
 				settings = _serializer.Deserialize<TSettings>(settingsData, out var rawData);
+
+				// Setup usage of the special extension methods.
+				settings.InitializeExtensionMethods(this);
+
 				if (!preventUpdate)
 				{
 					// Check if the settings instance differs from the data, so that the data can be updated.
@@ -116,9 +123,6 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 				}
 			}
 
-			// Setup usage of the special extension methods.
-			settings.InitializeExtensionMethods(this);
-
 			// Update the cache if needed.
 			if (!bypassCache) _cache.AddOrUpdate(settings);
 
@@ -138,6 +142,17 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 
 			// Save the data.
 			_sink.Store<TSettings>(settingsData);
+		}
+	}
+
+	/// <inheritdoc />
+	public void Delete<TSettings>(bool createBackup = default)
+		where TSettings : ISettings
+	{
+		lock (_lock)
+		{
+			_sink.Purge<TSettings>(createBackup);
+			_cache.TryRemove<TSettings>(out _);
 		}
 	}
 

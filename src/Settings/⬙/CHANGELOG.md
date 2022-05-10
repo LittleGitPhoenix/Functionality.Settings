@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ___
 
+## 3.1.0 (2022-05-10)
+
+### Added
+
+- Settings can now be deleted via the new `ISettingsManager.Delete()` or `ISettings.Delete()` methods.
+- The `ISettingsCache` interface and its default implementations now have a `TryRemove()` method.
+
+### Fixed
+
+- Using the extension method `ISettings.Save()` could cause an error if the save process tried to obtain the name of the settings instance via `ISettingsSink.GetSettingsName()` because `ISettings.Save()` used `ISettings` as generic type parameter instead of the specific one of the instance. This has been prevented by making `ISettings.Save()` itself generic.
+- Saving settings inside the `ISettingsLayoutChangedNotification.LayoutChanged` callback failed because `ISettings.InitializeExtensionMethods()` was called after the callback was invoked.
+___
+
 ## 3.0.0 (2022-02-12)
 
 > Version **3.x** introduces a new concept off settings handling and made a breaking change necessary. More can be found in the [**README.md**](../../../README.md)
@@ -24,7 +37,6 @@ ___
 
 - ~~Settings.Json.Net~~: In parts this has been replaced by **Settings.Serializers.Json.Net**
 - ~~Settings.Json.Newtonsoft~~: This has been deprecated in **v2.0.0** and is now completely removed
-
 ___
 
 ## 2.1.0 (2022-01-15)

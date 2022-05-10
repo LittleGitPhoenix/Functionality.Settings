@@ -73,7 +73,7 @@ public class WeakSettingsCache : ISettingsCache
 		var key = WeakSettingsCache.GetKey<TSettings>();
 		object? cachedSettings = default;
 		var wasLoadedFromCache = _cache.TryGetValue(key, out var cachedReference) && cachedReference.TryGetTarget(out cachedSettings);
-		settings = cachedSettings is not null ? (TSettings) cachedSettings : null;
+		settings = (TSettings?) cachedSettings;
 		return wasLoadedFromCache;
 	}
 
@@ -114,6 +114,20 @@ public class WeakSettingsCache : ISettingsCache
 		}
 	}
 
+	/// <inheritdoc />
+#if NETFRAMEWORK || NETSTANDARD2_0
+	public bool TryRemove<TSettings>(out TSettings? settings) where TSettings : ISettings
+#else
+	public bool TryRemove<TSettings>([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TSettings? settings) where TSettings : ISettings
+#endif
+	{
+		var key = WeakSettingsCache.GetKey<TSettings>();
+		object? cachedSettings = default;
+		var wasRemoved = _cache.TryRemove(key, out var weakSettings) && weakSettings.TryGetTarget(out cachedSettings);
+		settings = (TSettings?) cachedSettings;
+		return wasRemoved;
+	}
+	
 	/// <summary>
 	/// Gets the value from <typeparamref name="TSettings"/> used as key in the underlying cache.
 	/// </summary>

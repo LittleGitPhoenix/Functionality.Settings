@@ -7,7 +7,6 @@ namespace Settings.Encryption.Test;
 
 public class EncryptionHelperTest
 {
-	
 	#region Setup
 
 #pragma warning disable 8618 // → Always initialized in the 'Setup' method before a test is run.
@@ -33,6 +32,8 @@ public class EncryptionHelperTest
 
 	#endregion
 
+	#region Tests
+	
 	[Test]
 	public void Check_Encryption_And_Decrypt_Are_Identical()
 	{
@@ -109,4 +110,6 @@ public class EncryptionHelperTest
 		// Assert
 		Assert.IsNull(decrypted);
 	}
+
+	#endregion
 }

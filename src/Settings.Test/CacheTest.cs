@@ -1,4 +1,4 @@
-using AutoFixture;
+﻿using AutoFixture;
 using AutoFixture.AutoMoq;
 using NUnit.Framework;
 using Phoenix.Functionality.Settings;
@@ -9,13 +9,20 @@ namespace Settings.Test;
 public class CacheTest
 {
 	#region Setup
-	
+
+#pragma warning disable 8618 // → Always initialized in the 'Setup' method before a test is run.
+	private IFixture _fixture;
+#pragma warning restore 8618
+
 	[OneTimeSetUp]
 	public void BeforeAllTests() { }
 
 	[SetUp]
-	public void BeforeEachTest() { }
-	
+	public void BeforeEachTest()
+	{
+		_fixture = new Fixture().Customize(new AutoMoqCustomization());
+	}
+
 	[TearDown]
 	public void AfterEachTest() { }
 
@@ -207,6 +214,44 @@ public class CacheTest
 		cache.TryGetOrAdd(out var differentSettings, DifferentFactory);
 
 		return cache.GetAllCachedSettings();
+	}
+
+	#endregion
+
+	#region Delete Settings
+	
+	[Test]
+	public void Check_Delete_Settings_From_Strong_Cache()
+	{
+		var cache = new SettingsCache();
+		var wasRemoved = this.Delete_Settings(cache);
+		Assert.True(wasRemoved);
+		Assert.IsEmpty(cache.GetAllCachedSettings());
+	}
+	
+	[Test]
+	public void Check_Delete_Settings_From_Weak_Cache()
+	{
+		var cache = new WeakSettingsCache();
+		var wasRemoved = this.Delete_Settings(cache);
+		Assert.True(wasRemoved);
+		Assert.IsEmpty(cache.GetAllCachedSettings());
+	}
+	
+	[Test]
+	public void Check_Delete_Settings_From_No_Cache()
+	{
+		var cache = new NoSettingsCache();
+		var wasRemoved = this.Delete_Settings(cache);
+		Assert.False(wasRemoved);
+		Assert.IsEmpty(cache.GetAllCachedSettings());
+	}
+
+	private bool Delete_Settings(ISettingsCache cache)
+	{
+		var settings = new TestSettings();
+		cache.AddOrUpdate(settings);
+		return cache.TryRemove<TestSettings>(out _);
 	}
 
 	#endregion

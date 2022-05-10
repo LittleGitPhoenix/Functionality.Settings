@@ -72,6 +72,13 @@ class EncryptSettingsManager : ISettingsManager
 		this.DecryptProperties(settings);
 	}
 
+	/// <inheritdoc />
+	public void Delete<TSettings>(bool createBackup = default)
+		where TSettings : ISettings
+	{
+		_underlyingSettingsManager.Delete<TSettings>(createBackup);
+	}
+
 	#endregion
 
 	/// <summary>

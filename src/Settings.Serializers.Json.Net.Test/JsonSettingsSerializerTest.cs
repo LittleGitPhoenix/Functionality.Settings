@@ -68,6 +68,8 @@ public class JsonSettingsSerializerTest
 	}
 
 	#endregion
+	
+	#region Tests
 
 	[Test]
 	public void Check_Serialization_Succeeds()
@@ -229,4 +231,6 @@ public class JsonSettingsSerializerTest
 		Assert.That(((IDictionary<string, object>) rawData!)[nameof(ChangeSettings.Message)].ToString(), Is.EqualTo(message));
 		Assert.That(((dynamic) rawData).Superfluous.ToString(), Is.EqualTo("Irrelevant"));
 	}
+
+	#endregion
 }

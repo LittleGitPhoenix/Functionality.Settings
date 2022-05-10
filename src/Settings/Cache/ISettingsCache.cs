@@ -20,7 +20,7 @@ public interface ISettingsCache
 	/// </summary>
 	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
 	/// <param name="settings"> The settings instance. </param>
-	/// <returns> <c>True</c> if the settings where retrieved from cache, otherwise <c>False</c>. </returns>
+	/// <returns> <b>True</b> if the settings where retrieved from cache, otherwise <b>False</b>. </returns>
 #if NETFRAMEWORK || NETSTANDARD2_0
 	bool TryGet<TSettings>(out TSettings? settings) where TSettings : class, ISettings;
 #else
@@ -40,6 +40,18 @@ public interface ISettingsCache
 	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
 	/// <param name="settings"> The settings instance. </param>
 	/// <param name="factory"> The factory method that will create a new settings instance. </param>
-	/// <returns> <c>True</c> if the settings where retrieved from cache, otherwise <c>False</c>. </returns>
+	/// <returns> <b>True</b> if the settings where retrieved from cache, otherwise <b>False</b>. </returns>
 	bool TryGetOrAdd<TSettings>(out TSettings settings, Func<TSettings> factory) where TSettings : class, ISettings;
+
+	/// <summary>
+	/// Tries to remove the settings of type <typeparamref name="TSettings"/>.
+	/// </summary>
+	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
+	/// <param name="settings"> The removed settings instance. </param>
+	/// <returns> <b>True</b> if the settings where removed from cache, otherwise <b>False</b>. </returns>
+#if NETFRAMEWORK || NETSTANDARD2_0
+	bool TryRemove<TSettings>(out TSettings? settings) where TSettings : ISettings;
+#else
+	bool TryRemove<TSettings>([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TSettings? settings) where TSettings : ISettings;
+#endif
 }

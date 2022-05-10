@@ -51,6 +51,8 @@ public class SettingsManagerTest
 
 	#endregion
 
+	#region Tests
+	
 	#region Load
 
 	[Test]
@@ -429,6 +431,55 @@ public class SettingsManagerTest
 		// Assert
 		Assert.That(SettingsExtensions.Cache, Has.Count.EqualTo(1));
 	}
+
+	#endregion
+
+	#region Delete
+
+	[Test]
+	public void Check_Delete_Calls_Sink()
+	{
+		// Arrange
+		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
+		Mock.Get(sink).Setup(mock => mock.Purge<Settings>(It.IsAny<bool>())).Verifiable();
+		_fixture.Inject(sink);
+		var manager = _fixture.Create<Mock<SettingsManager<string>>>().Object;
+
+		// Act
+		manager.Delete<Settings>(false);
+
+		// Assert
+		Mock.Get(sink).Verify(mock => mock.Purge<Settings>(It.IsAny<bool>()), Times.Once);
+	}
+
+	[Test]
+	public void Check_Delete_Removes_Cached_Instance()
+	{
+		// Arrange
+		var settings = new Settings();
+		var internalCache = new List<Settings>() {settings};
+		var cache = _fixture.Create<Mock<ISettingsCache>>().Object;
+		Mock.Get(cache)
+			.Setup(mock => mock.TryRemove(out It.Ref<Settings?>.IsAny))
+			.Callback
+			(
+				() =>
+				{
+					internalCache.Remove(settings);
+				}
+			)
+			;
+		_fixture.Inject(cache);
+		var manager = _fixture.Create<Mock<SettingsManager<string>>>().Object;
+
+		// Act
+		manager.Delete<Settings>(false);
+
+		// Assert
+		Assert.IsEmpty(internalCache);
+	}
+
+	#endregion
 
 	#endregion
 }

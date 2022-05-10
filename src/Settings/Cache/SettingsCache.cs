@@ -58,7 +58,7 @@ public class SettingsCache : ISettingsCache
 	{
 		var key = SettingsCache.GetKey<TSettings>();
 		_cache.TryGetValue(key, out var cachedSettings);
-		settings = cachedSettings is not null ? (TSettings) cachedSettings : null;
+		settings = (TSettings?) cachedSettings;
 		return settings is not null;
 	}
 
@@ -71,7 +71,6 @@ public class SettingsCache : ISettingsCache
 
 	/// <inheritdoc />
 	public bool TryGetOrAdd<TSettings>(out TSettings settings, Func<TSettings> factory) where TSettings : class, ISettings
-
 	{
 		var key = SettingsCache.GetKey<TSettings>();
 		var wasLoadedFromCache = _cache.TryGetValue(key, out var cachedSettings);
@@ -82,6 +81,19 @@ public class SettingsCache : ISettingsCache
 		}
 		settings = (TSettings) cachedSettings;
 		return wasLoadedFromCache;
+	}
+
+	/// <inheritdoc />
+#if NETFRAMEWORK || NETSTANDARD2_0
+	public bool TryRemove<TSettings>(out TSettings? settings) where TSettings : ISettings
+#else
+	public bool TryRemove<TSettings>([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TSettings? settings) where TSettings : ISettings
+#endif
+	{
+		var key = SettingsCache.GetKey<TSettings>();
+		_cache.TryRemove(key, out var cachedSettings);
+		settings = (TSettings?) cachedSettings;
+		return settings is not null;
 	}
 
 	/// <summary>

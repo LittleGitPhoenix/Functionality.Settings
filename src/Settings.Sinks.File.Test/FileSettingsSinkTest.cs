@@ -34,9 +34,6 @@ public class FileSettingsSinkTest
 			Console.WriteLine($"The working directory '{actualWorkingDirectory}' mismatches its expectation '{targetWorkingDirectory}'. It has been changed for the unit test to properly run.");
 			Directory.SetCurrentDirectory(targetWorkingDirectory);
 		}
-
-		////! This has to be done AFTER the working directory may have been changed.
-		//this.Data = new TestData();
 	}
 
 	[TearDown]
@@ -55,6 +52,8 @@ public class FileSettingsSinkTest
 
 	#endregion
 
+	#region Tests
+	
 	#region Retrieve
 
 	[Test]
@@ -229,6 +228,8 @@ public class FileSettingsSinkTest
 		// Act + Assert
 		Assert.Catch<SettingsSaveException>(() => sink.Store<Settings>(content, true));
 	}
+
+	#endregion
 
 	#endregion
 }

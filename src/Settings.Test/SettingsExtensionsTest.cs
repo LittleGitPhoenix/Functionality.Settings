@@ -1,4 +1,6 @@
-﻿using Moq;
+﻿using AutoFixture;
+using AutoFixture.AutoMoq;
+using Moq;
 using NUnit.Framework;
 using Phoenix.Functionality.Settings;
 
@@ -8,12 +10,17 @@ public class SettingsExtensionsTest
 {
 	#region Setup
 
+#pragma warning disable 8618 // → Always initialized in the 'Setup' method before a test is run.
+	private IFixture _fixture;
+#pragma warning restore 8618
+
 	[OneTimeSetUp]
 	public void BeforeAllTests() { }
 
 	[SetUp]
 	public void BeforeEachTest()
 	{
+		_fixture = new Fixture().Customize(new AutoMoqCustomization());
 		SettingsExtensions.Cache.Clear();
 	}
 
@@ -25,11 +32,63 @@ public class SettingsExtensionsTest
 
 	#endregion
 
-	#region Reload
-
+	#region Data
+	
 	class Settings : ISettings { }
 
 	class OtherSettings : ISettings { }
+	
+	/// <summary>
+	/// Special <see cref="ISettingsManager"/> that can be used to verify the generic type parameter of the implemented methods.
+	/// </summary>
+	class TypeMatchSettingsManager : ISettingsManager
+	{
+		public Settings Settings { get; }
+
+		private readonly Type _settingsType;
+
+		public TypeMatchSettingsManager()
+		{
+			this.Settings = new Settings();
+			this.Settings.InitializeExtensionMethods(this);
+			_settingsType = this.Settings.GetType();
+		}
+
+		#region Implementation of ISettingsManager
+
+		/// <inheritdoc />
+		public TSettings Load<TSettings>(bool bypassCache = false, bool preventCreation = false, bool preventUpdate = false)
+			where TSettings : class, ISettings, new()
+		{
+			if (typeof(TSettings) != _settingsType)
+				throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+			return default;
+		}
+
+		/// <inheritdoc />
+		public void Save<TSettings>(TSettings settings, bool createBackup = default)
+			where TSettings : ISettings
+		{
+			if (typeof(TSettings) != _settingsType)
+				throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+		}
+
+		/// <inheritdoc />
+		public void Delete<TSettings>(bool createBackup = default)
+			where TSettings : ISettings
+		{
+			if (typeof(TSettings) != _settingsType)
+				throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+		}
+
+		#endregion
+	}
+
+	#endregion
+
+	#region Tests
+
+	#region Reload
 
 	[Test]
 	public void Invoking_Reload_With_Different_Types_Throws()
@@ -62,7 +121,7 @@ public class SettingsExtensionsTest
 
 		settings.Reload<Settings>(false);
 		settingsManagerMock.Verify(manager => manager.Load<Settings>(true, false, It.IsAny<bool>()), Times.Once());
-			
+
 		settings.Reload<Settings>(true);
 		settingsManagerMock.Verify(manager => manager.Load<Settings>(true, true, It.IsAny<bool>()), Times.Once());
 	}
@@ -100,6 +159,23 @@ public class SettingsExtensionsTest
 		settings.Save(true);
 		settingsManagerMock.Verify(manager => manager.Save<ISettings>(settings, true), Times.Once());
 	}
+
+	/// <summary>
+	/// This test checks, that using the extension method <see cref="SettingsExtensions.Save{TSettings}"/> passes the specific generic type parameter of the settings instance to the <see cref="ISettingsManager.Save{TSettings}"/> method.
+	/// </summary>
+	/// <remarks> If the extension method uses <see cref="ISettings"/> as generic type, than <see cref="SettingsSinkExtensions.GetSettingsName{TSettings}"/> would not be able to get the real name of the settings instance. </remarks>
+	[Test]
+	public void Invoking_Save_Uses_Specific_Generic_Type()
+	{
+		// Arrange
+		var settingsManager = new TypeMatchSettingsManager();
+		var settings = settingsManager.Settings;
+		
+		// Act + Assert
+		Assert.DoesNotThrow(() => settings.Save(false));
+	}
+
+	#endregion
 
 	#endregion
 }

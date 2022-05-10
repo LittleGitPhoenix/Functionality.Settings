@@ -31,6 +31,8 @@ public class RegexConverterTest
 
 	#endregion
 
+	#region Tests
+	
 	[Test]
 	public void Deserialize_Regex_From_String()
 	{
@@ -108,4 +110,6 @@ public class RegexConverterTest
 		// Assert
 		Assert.AreEqual(targetPattern, actualPattern);
 	}
+
+	#endregion
 }

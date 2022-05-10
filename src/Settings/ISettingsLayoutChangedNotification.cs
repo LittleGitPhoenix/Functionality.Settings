@@ -12,7 +12,7 @@ namespace Phoenix.Functionality.Settings;
 public interface ISettingsLayoutChangedNotification
 {
 	/// <summary>
-	/// Invoked if settings have been loaded but they differ from the underlying data.
+	/// Invoked if settings have been loaded but their layout differs from the underlying data.
 	/// </summary>
 	/// <param name="rawData"> The original serialized settings data. </param>
 	void LayoutChanged(ExpandoObject rawData);

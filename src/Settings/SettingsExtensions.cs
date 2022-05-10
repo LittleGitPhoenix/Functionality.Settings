@@ -83,7 +83,8 @@ public static class SettingsExtensions
 	/// <inheritdoc cref="ISettingsManager.Save{TSettings}"/>
 	/// <exception cref="MissingSettingsManagerException"> Thrown if the <paramref name="settings"/> instance is not linked to a cached <see cref="ISettingsManager"/>. Use the hidden <see cref="InitializeExtensionMethods"/> method for initialization. </exception>
 	/// <remarks> This extension method will only work for <see cref="ISettings"/> instances that called the <see cref="InitializeExtensionMethods"/> method so that the <see cref="ISettingsManager"/> that was used to load the instance has been cached internally and can be used for saving. </remarks>
-	public static void Save(this ISettings settings, bool createBackup = default)
+	public static void Save<TSettings>(this TSettings settings, bool createBackup = default)
+		where TSettings : ISettings
 	{
 		if (!SettingsExtensions.Cache.TryGetValue(settings.GetType(), out var settingsManager))
 		{
@@ -91,6 +92,20 @@ public static class SettingsExtensions
 		}
 
 		settingsManager.Save(settings, createBackup);
+	}
+
+	/// <inheritdoc cref="ISettingsManager.Delete{TSettings}"/>
+	/// <exception cref="MissingSettingsManagerException"> Thrown if the <paramref name="settings"/> instance is not linked to a cached <see cref="ISettingsManager"/>. Use the hidden <see cref="InitializeExtensionMethods"/> method for initialization. </exception>
+	/// <remarks> This extension method will only work for <see cref="ISettings"/> instances that called the <see cref="InitializeExtensionMethods"/> method so that the <see cref="ISettingsManager"/> that was used to load the instance has been cached internally and can be used for saving. </remarks>
+	public static void Delete<TSettings>(this TSettings settings, bool createBackup = default)
+		where TSettings : ISettings
+	{
+		if (!SettingsExtensions.Cache.TryGetValue(settings.GetType(), out var settingsManager))
+		{
+			throw new MissingSettingsManagerException(settings);
+		}
+
+		settingsManager.Delete<TSettings>(createBackup);
 	}
 
 	#endregion
@@ -131,7 +146,7 @@ public sealed class MissingSettingsManagerException : SettingsExtensionMethodExc
 }
 
 /// <summary>
-/// Exception thrown if the generic <c>TSettings</c> parameter of an extension methods of <see cref="ISettings"/> does not match the type of the settings instance.
+/// Exception thrown if the generic <b>TSettings</b> parameter of an extension methods of <see cref="ISettings"/> does not match the type of the settings instance.
 /// </summary>
 [Obsolete("The 'Reload' extension method - that was the only one to throw this exception - now has its generic parameter match the extended settings type. therefor making this exception superfluous.")]
 public sealed class SettingsTypeMismatchException : SettingsExtensionMethodException

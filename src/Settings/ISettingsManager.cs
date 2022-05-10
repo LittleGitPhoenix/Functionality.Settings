@@ -47,5 +47,13 @@ public interface ISettingsManager
 	/// <exception cref="SettingsSaveException"> May be thrown if the settings data could not be saved. </exception>
 	void Save<TSettings>(TSettings settings, bool createBackup = default) where TSettings : ISettings;
 
+	/// <summary>
+	/// Deletes the settings.
+	/// </summary>
+	/// <param name="createBackup"> Should a backup of the settings be made before the get deleted. </param>
+	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
+	/// <exception cref="SettingsDeleteException"> May be thrown if the settings data could not be saved. </exception>
+	void Delete<TSettings>(bool createBackup = default) where TSettings : ISettings;
+
 	#endregion
 }

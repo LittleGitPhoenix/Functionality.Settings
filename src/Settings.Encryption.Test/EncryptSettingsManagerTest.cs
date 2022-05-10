@@ -145,9 +145,11 @@ public class EncryptSettingsManagerTest
 		[Encrypt]
 		internal EncryptedCollection NestedMessages { get; set; } = new EncryptedCollection();
 	}
-		
+
 	#endregion
 
+	#region Tests
+	
 	#region Property Detection
 
 	[Test]
@@ -562,6 +564,8 @@ public class EncryptSettingsManagerTest
 		// Assert
 		Assert.False(needsEncryption);
 	}
+
+	#endregion
 
 	#endregion
 }

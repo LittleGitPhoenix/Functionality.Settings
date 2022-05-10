@@ -3,7 +3,6 @@
 #endregion
 
 using System.Dynamic;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace Phoenix.Functionality.Settings.Serializers.Json.Net;
@@ -23,7 +22,7 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 
 	/// <summary> The default <see cref="JsonSerializerOptions"/>. </summary>
 	private static readonly JsonSerializerOptions DefaultJsonSerializerOptions;
-
+	
 	/// <summary> The <see cref="JsonSerializerOptions"/> used by this handler. </summary>
 	private readonly JsonSerializerOptions _jsonSerializerOptions;
 
@@ -128,11 +127,18 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 		try
 		{
 			var targetJsonData = this.Serialize(settings);
-			var targetJsonDocument = JsonDocument.Parse(targetJsonData);
-			var targetData = ConvertJsonDocumentToData(targetJsonDocument).Result;
-
-			var actualJsonDocument = JsonDocument.Parse(settingsData);
-			var actualData = ConvertJsonDocumentToData(actualJsonDocument).Result;
+			
+			//// Manual
+			//var targetJsonDocument = JsonDocument.Parse(targetJsonData, CompareOptions);
+			//var targetData = ConvertJsonDocumentToData(targetJsonDocument).Result;
+			//var actualJsonDocument = JsonDocument.Parse(settingsData, CompareOptions);
+			//var actualData = ConvertJsonDocumentToData(actualJsonDocument).Result;
+			
+			// Build-in
+			var targetData = JsonSerializer.SerializeToUtf8Bytes(targetJsonData, _jsonSerializerOptions);
+			//var target = System.Text.Encoding.UTF8.GetString(targetData, 0, targetData.Length);
+			var actualData = JsonSerializer.SerializeToUtf8Bytes(settingsData, _jsonSerializerOptions);
+			//var actual = System.Text.Encoding.UTF8.GetString(actualData, 0, actualData.Length);
 
 			var areIdentical = targetData.SequenceEqual(actualData);
 			return areIdentical;
@@ -157,22 +163,22 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 	internal virtual TSettings? Deserialize<TSettings>(string settingsData)
 		=> JsonSerializer.Deserialize<TSettings>(settingsData, _jsonSerializerOptions);
 
-	private static async Task<byte[]> ConvertJsonDocumentToData(JsonDocument document)
-	{
-#if NETSTANDARD2_0 || NETSTANDARD1_6 || NETSTANDARD1_5 || NETSTANDARD1_4 || NETSTANDARD1_3 || NETSTANDARD1_2 || NETSTANDARD1_1 || NETSTANDARD1_0
-		using var stream = new MemoryStream();
-#else
-		await using var stream = new MemoryStream();
-#endif
-		await using (var writer = new Utf8JsonWriter(stream))
-		{
-			document.RootElement.WriteTo(writer);
-			await writer.FlushAsync().ConfigureAwait(false);
-		}
+//	private static async Task<byte[]> ConvertJsonDocumentToData(JsonDocument document)
+//	{
+//#if NETSTANDARD2_0 || NETSTANDARD1_6 || NETSTANDARD1_5 || NETSTANDARD1_4 || NETSTANDARD1_3 || NETSTANDARD1_2 || NETSTANDARD1_1 || NETSTANDARD1_0
+//		using var stream = new MemoryStream();
+//#else
+//		await using var stream = new MemoryStream();
+//#endif
+//		await using (var writer = new Utf8JsonWriter(stream))
+//		{
+//			document.RootElement.WriteTo(writer);
+//			await writer.FlushAsync().ConfigureAwait(false);
+//		}
 
-		stream.Seek(0, SeekOrigin.Begin);
-		return stream.ToArray();
-	}
+//		stream.Seek(0, SeekOrigin.Begin);
+//		return stream.ToArray();
+//	}
 
 	#endregion
 

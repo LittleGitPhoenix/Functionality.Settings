@@ -30,6 +30,8 @@ public class TimeSpanConverterTest
 
 	#endregion
 
+	#region Tests
+
 	[Test]
 	public void Deserialize_TimeSpan_From_Numeric()
 	{
@@ -93,4 +95,6 @@ public class TimeSpanConverterTest
 		Assert.True(success);
 		Assert.AreEqual(value, targetValue);
 	}
+
+	#endregion
 }

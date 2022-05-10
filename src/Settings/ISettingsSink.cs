@@ -26,11 +26,18 @@ public interface ISettingsSink<TSettingsData> : ISettingsSink
 	TSettingsData? Retrieve<TSettings>() where TSettings : ISettings;
 
 	/// <summary>
-	/// Stores <paramref name="settingsData"/> in the the persistent storage.
+	/// Stores <paramref name="settingsData"/> in the persistent storage.
 	/// </summary>
 	/// <typeparam name="TSettings"> The type of the settings to store. </typeparam>
 	/// <param name="settingsData"> The settings data to store. </param>
 	/// <param name="createBackup"> Optional flag if a backup of already existing data should be created. Default is false. </param>
 	/// <exception cref="SettingsSaveException"> May be thrown if the settings data could not be stored. </exception>
 	void Store<TSettings>(TSettingsData settingsData, bool createBackup = default) where TSettings : ISettings;
+
+	/// <summary>
+	/// Purges the settings data for <typeparamref name="TSettings"/> from the persistent storage.
+	/// </summary>
+	/// <typeparam name="TSettings"> The type of the settings to purge. </typeparam>
+	/// <param name="createBackup"> Optional flag if a backup should be created. Default is false. </param>
+	void Purge <TSettings>(bool createBackup = default) where TSettings : ISettings;
 }

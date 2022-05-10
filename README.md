@@ -58,8 +58,15 @@ var settingsManager = SettingsManager<string>
 Since sinks, serializers and caches can provide their own fluent syntax, a more complete example could look like this:
 
 ``` csharp
+using Phoenix.Functionality.Settings;
+using Phoenix.Functionality.Settings.Cache;
+using Phoenix.Functionality.Settings.Encryption;
+using Phoenix.Functionality.Settings.Serializers.Json.Net;
+using Phoenix.Functionality.Settings.Serializers.Json.Net.CustomConverters;
+using Phoenix.Functionality.Settings.Sinks.File;
+
 var fileExtension = ".json";
-var baseDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
+var baseDirectory = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), ".settings"));
 var settingsManager = SettingsManager<string>
 	.Create()
 	.UsingFileSink(fileExtension, baseDirectory)
@@ -88,7 +95,7 @@ For modifying certain behavior to or add more information to settings, the follo
 
 | Attribute Name | Description |
 | :- | :- |
-| `SettingsFileNameAttribute` | Defines a custom name for an `ISettings` class that may be used to store the settings. By default the name would be the type name. |
+| `SettingsNameAttribute` | Defines a custom name for an `ISettings` class that may be used to store the settings. By default the name equals the type name. |
 | `SettingsDescriptionAttribute` | A custom description for an `ISettings` class or one of its properties. |
 
 
@@ -191,14 +198,16 @@ The package provides special converters that allow for some common types to be u
   		Relative path are only supported with up to three parent folders (e.g <b>../../.../MyFolder/Some.file</b>). Other files will be saved as absolute path.
       </div>
   </div>
-  
+
 - `IpAddressConverter`
 
 - `RegexConverter`
 
 - `TimeSpanConverter`
 
-	The string representation of a **TimeSpan** is in **milliseconds**.
+  The string representation of a **TimeSpan** is in **milliseconds**.
+
+- `VersionConverter`
 ___
 
 # Implementations of `ISettingsCache`
@@ -286,7 +295,7 @@ When loading settings, the `EncryptSettingsManager` traverses all properties of 
     </span>
     <br>
 	<div style='margin-left:1em; margin-right:1em;'>
-		To only recursively traverse user-created types the <i>EncryptSettingsManager</i> must distingusih those types from the <b>.NET</b> build-in types. To make this possible (especially within apps that are published as single-file executable) the manager will not traverse into  types that come from assemblies whose name starts with <b>System</b>.<br><br>The <b><i>EncryptForceFollowAttribute</i></b> can be used in cases where this may be undesireable, to force the <i>EncryptSettingsManager</i> to traverse the attributed property nevertheless.<br><br>The <b><i>EncryptDoNotFollowAttribute</i></b> on the other side will instruct the manager to not traverse the attributed property.
+		To only recursively traverse user-created types the <i>EncryptSettingsManager</i> must distingusih those types from the <b>.NET</b> build-in types. To make this possible (especially within apps that are published as single-file executable) the manager will not traverse into  types that come from assemblies whose name starts with <b>System</b>.<br>The <b><i>EncryptForceFollowAttribute</i></b> can be used in cases where this may be undesireable, to force the <i>EncryptSettingsManager</i> to traverse the attributed property nevertheless.<br>The <b><i>EncryptDoNotFollowAttribute</i></b> on the other side will instruct the manager to not traverse the attributed property.
     </div>
 </div>
 

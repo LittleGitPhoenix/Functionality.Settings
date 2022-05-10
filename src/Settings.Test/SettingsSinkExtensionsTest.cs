@@ -33,7 +33,7 @@ public class SettingsSinkExtensionsTest
 
 	#region Data
 
-	private const string CustomSettingsName = "MyCustomSettingsName";
+	private const string CustomSettingsName = "MySettings";
 
 	// ReSharper disable once ClassNeverInstantiated.Local → Only the type is used for unit tests.
 	class UnnamedSettings : ISettings { }
@@ -43,6 +43,8 @@ public class SettingsSinkExtensionsTest
 	class NamedSettings : ISettings { }
 
 	#endregion
+
+	#region Tests
 
 	[Test]
 	public void Get_Settings_Name()
@@ -71,4 +73,6 @@ public class SettingsSinkExtensionsTest
 		// Assert
 		Assert.AreEqual(targetName, settingsFileName);
 	}
+
+	#endregion
 }

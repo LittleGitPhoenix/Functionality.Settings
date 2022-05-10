@@ -34,3 +34,12 @@ public class SettingsSaveException : SettingsException
 	/// <inheritdoc />
 	public SettingsSaveException(string message, Exception? innerException = null) : base(message, innerException) { }
 }
+
+/// <summary>
+/// Base exception used when deleting settings fails (e.g. <see cref="ISettingsManager.Delete{TSettings}"/>).
+/// </summary>
+public class SettingsDeleteException : SettingsException
+{
+	/// <inheritdoc />
+	public SettingsDeleteException(string message, Exception? innerException = null) : base(message, innerException) { }
+}

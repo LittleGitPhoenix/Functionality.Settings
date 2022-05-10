@@ -26,7 +26,7 @@ public class FileSettingsSink : ISettingsSink<string>
 	#endregion
 
 	#region Fields
-
+	
 	/// <summary> The file extension of settings files. </summary>
 	private readonly string _fileExtension;
 
@@ -42,7 +42,7 @@ public class FileSettingsSink : ISettingsSink<string>
 	#endregion
 
 	#region (De)Constructors
-
+	
 	/// <summary>
 	/// Constructor
 	/// </summary>
@@ -70,7 +70,7 @@ public class FileSettingsSink : ISettingsSink<string>
 	#endregion
 
 	#region Methods
-
+	
 	/// <inheritdoc />
 	public string? Retrieve<TSettings>() where TSettings : ISettings
 	{
@@ -121,7 +121,30 @@ public class FileSettingsSink : ISettingsSink<string>
 		}
 		catch (Exception ex)
 		{
-			throw new SettingsSaveException($"Could save settings data to file '{fullSettingsFileName}'. See the inner exception for further details.", ex);
+			throw new SettingsSaveException($"Could not save settings data to file '{fullSettingsFileName}'. See the inner exception for further details.", ex);
+		}
+	}
+
+	/// <inheritdoc />
+	public void Purge<TSettings>(bool createBackup = default)
+		where TSettings : ISettings
+	{
+		var fullSettingsFileName = this.BuildFullSettingsFileName<TSettings>(_baseDirectory);
+		try
+		{
+			var settingsFile = this.GetSettingsFile(fullSettingsFileName);
+			if (settingsFile.Exists)
+			{
+				// Create a backup.
+				if (createBackup) this.CreateBackup(settingsFile);
+
+				// Delete the file.
+				this.DeleteExistingSettingsFile(settingsFile);
+			}
+		}
+		catch (Exception ex)
+		{
+			throw new SettingsDeleteException($"Could not delete settings file '{fullSettingsFileName}'. See the inner exception for further details.", ex);
 		}
 	}
 
@@ -156,7 +179,11 @@ public class FileSettingsSink : ISettingsSink<string>
 	/// <param name="settingsFile"> The settings file to delete. </param>
 	internal virtual void DeleteExistingSettingsFile(FileInfo settingsFile)
 	{
-		if (settingsFile.Exists) settingsFile.Delete();
+		if (settingsFile.Exists)
+		{
+			settingsFile.Delete();
+			settingsFile.Refresh();
+		}
 	}
 
 	/// <summary>

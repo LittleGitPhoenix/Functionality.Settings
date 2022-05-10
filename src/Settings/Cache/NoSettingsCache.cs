@@ -44,7 +44,6 @@ public class NoSettingsCache : ISettingsCache
 #else
 	public bool TryGet<TSettings>([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TSettings? settings) where TSettings : class, ISettings
 #endif
-
 	{
 		settings = default;
 		return false;
@@ -62,6 +61,17 @@ public class NoSettingsCache : ISettingsCache
 		settings = factory.Invoke();
 		return false;
 	}
-		
+
+	/// <inheritdoc />
+#if NETFRAMEWORK || NETSTANDARD2_0
+	public bool TryRemove<TSettings>(out TSettings? settings) where TSettings : ISettings
+#else
+	public bool TryRemove<TSettings>([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TSettings? settings) where TSettings : ISettings
+#endif
+	{
+		settings = default;
+		return false;
+	}
+
 	#endregion
 }
