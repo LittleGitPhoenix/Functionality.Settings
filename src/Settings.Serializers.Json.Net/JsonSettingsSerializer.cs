@@ -4,6 +4,7 @@
 
 using System.Dynamic;
 using System.Text.Json;
+using Phoenix.Functionality.Settings.Serializers.Json.Net.CustomConverters;
 
 namespace Phoenix.Functionality.Settings.Serializers.Json.Net;
 
@@ -45,8 +46,9 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 			WriteIndented = true,
 			Converters =
 			{
-				// Build in:
-				new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false),
+				//! Now dynamically added in the instance constructor.
+				//// Build in:
+				//new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false),
 			}
 		};
 	}
@@ -75,6 +77,13 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 		_jsonSerializerOptions = jsonSerializerOptions ?? DefaultJsonSerializerOptions;
 
 		// Initialize fields.
+		if
+		(
+			!ContainsConverter<EnumConverter>(customJsonConverters)
+			&& !ContainsConverter<EnumConverter.InternalEnumConverter>(customJsonConverters)
+			&& !ContainsConverter<System.Text.Json.Serialization.JsonStringEnumConverter>(customJsonConverters)
+		)
+			this.AddDefaultJsonConverter();
 		foreach (var customJsonConverter in customJsonConverters) TryAddCustomConverter(customJsonConverter, _jsonSerializerOptions.Converters);
 	}
 
@@ -151,13 +160,27 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 
 	#region Helper
 
-	internal static bool TryAddCustomConverter(System.Text.Json.Serialization.JsonConverter customJsonConverter, ICollection<System.Text.Json.Serialization.JsonConverter> customJsonConverters)
+	internal virtual void AddDefaultJsonConverter()
+	{
+		var defaultJsonConverter = new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false);
+		TryAddCustomConverter(defaultJsonConverter, _jsonSerializerOptions.Converters);
+	}
+
+	internal static bool TryAddCustomConverter(System.Text.Json.Serialization.JsonConverter customJsonConverter, ICollection<System.Text.Json.Serialization.JsonConverter> jsonConverters)
 	{
 		var newType = customJsonConverter.GetType();
-		var converterTypes = customJsonConverters.Select(converter => converter.GetType()).ToArray();
-		if (converterTypes.Contains(newType)) return false;
-		customJsonConverters.Add(customJsonConverter);
+		if (ContainsConverter(newType, jsonConverters)) return false;
+		jsonConverters.Add(customJsonConverter);
 		return true;
+	}
+
+	private static bool ContainsConverter<T>(ICollection<System.Text.Json.Serialization.JsonConverter> jsonConverters)
+		where T : System.Text.Json.Serialization.JsonConverter
+		=> ContainsConverter(typeof(T), jsonConverters);
+
+	private static bool ContainsConverter(Type converterType, ICollection<System.Text.Json.Serialization.JsonConverter> jsonConverters)
+	{
+		return jsonConverters.FirstOrDefault(converter => converter.GetType() == converterType) is not null;
 	}
 
 	internal virtual TSettings? Deserialize<TSettings>(string settingsData)

@@ -192,6 +192,43 @@ public class JsonSettingsSerializerTest
 	}
 
 	/// <summary>
+	/// Checks that the <see cref="System.Text.Json.Serialization.JsonStringEnumConverter"/> is added, if no other enum converter is available.
+	/// </summary>
+	[Test]
+	public void Check_Default_Json_Converter_Is_Added()
+	{
+		// Arrange
+		var serializerMock = _fixture.Create<Mock<JsonSettingsSerializer>>();
+		serializerMock.Setup(mock => mock.AddDefaultJsonConverter()).CallBase().Verifiable();
+		
+		// Act
+		_ = serializerMock.Object;
+
+		// Assert
+		serializerMock.Verify(mock => mock.AddDefaultJsonConverter(), Times.Once);
+	}
+
+	/// <summary>
+	/// Checks that the <see cref="System.Text.Json.Serialization.JsonStringEnumConverter"/> is not added, if another enum converter is available.
+	/// </summary>
+	[Test]
+	[TestCase(typeof(EnumConverter.InternalEnumConverter))]
+	[TestCase(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
+	public void Check_Default_Json_Converter_Is_Not_Added(Type enumConverterType) /*where T : class, new()*/
+	{
+		// Arrange
+		var enumConverter = (System.Text.Json.Serialization.JsonConverter) _fixture.Create(enumConverterType, new AutoFixture.Kernel.SpecimenContext(_fixture));
+		var serializerMock = new Mock<JsonSettingsSerializer>(enumConverter); //! This may break if the constructor of JsonSettingsSerializer changes.
+		serializerMock.Setup(mock => mock.AddDefaultJsonConverter()).CallBase().Verifiable();
+		
+		// Act
+		_ = serializerMock.Object;
+
+		// Assert
+		serializerMock.Verify(mock => mock.AddDefaultJsonConverter(), Times.Never);
+	}
+
+	/// <summary>
 	/// Checks that identical <see cref="System.Text.Json.Serialization.JsonConverter"/>s are not added multiple times.
 	/// </summary>
 	[Test]

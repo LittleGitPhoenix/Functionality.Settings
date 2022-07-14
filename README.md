@@ -76,6 +76,8 @@ var settingsManager = SettingsManager<string>
 		.WithIpAddressConverter()
 		.WithRegexConverter()
 		.WithTimeSpanConverter()
+		.WithVersionConverter()
+		.WithEnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"))
 		.WithDefaultSerializerOptions()
 	.UsingWeakCache()
 	.UsingEncryption()
@@ -208,6 +210,18 @@ The package provides special converters that allow for some common types to be u
   The string representation of a **TimeSpan** is in **milliseconds**.
 
 - `VersionConverter`
+
+- `EnumConverter`
+
+	Contrary to **Microsofts** **JsonStringEnumConverter** this converter can optionally be configured via different `IWriteOutOptions`, to add the values of an enumeration to the serialized string.
+
+	```c#
+	enum MyEnum { Entry1, Entry2, Entry3 }
+	var converter = new EnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"));
+	converter.Serialize(MyEnum.Entry2) // Would return "Entry2 [Entry1;Entry2;Entry3]".
+	```
+
+	
 ___
 
 # Implementations of `ISettingsCache`

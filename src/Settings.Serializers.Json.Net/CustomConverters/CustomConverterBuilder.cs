@@ -62,4 +62,36 @@ public static class CustomConverterBuilder
 	{
 		return builder.AddConverter(new TimeSpanConverter());
 	}
+
+	/// <summary>
+	/// Adds the <see cref="VersionConverter"/> as custom <see cref="System.Text.Json.Serialization.JsonConverter"/> to the builder.
+	/// </summary>
+	/// <param name="builder"> The extended <see cref="IJsonSettingsSerializerOptionsBuilder"/>. </param>
+	/// <returns> An <see cref="IJsonSettingsSerializerOptionsBuilder"/> for chaining. </returns>
+	public static IJsonSettingsSerializerOptionsBuilder WithVersionConverter(this IJsonSettingsSerializerOptionsBuilder builder)
+	{
+		return builder.AddConverter(new VersionConverter());
+	}
+
+	/// <summary>
+	/// Adds the <see cref="EnumConverter"/> as custom <see cref="System.Text.Json.Serialization.JsonConverter"/> to the builder.
+	/// </summary>
+	/// <param name="builder"> The extended <see cref="IJsonSettingsSerializerOptionsBuilder"/>. </param>
+	/// <param name="options"> The <see cref="EnumConverterOptions"/> used for (de)serialization. </param>
+	/// <returns> An <see cref="IJsonSettingsSerializerOptionsBuilder"/> for chaining. </returns>
+	public static IJsonSettingsSerializerOptionsBuilder WithEnumConverter(this IJsonSettingsSerializerOptionsBuilder builder, EnumConverterOptions? options)
+	{
+		return builder.AddConverter(new EnumConverter(options));
+	}
+
+	/// <summary>
+	/// Adds the <see cref="EnumConverter"/> as custom <see cref="System.Text.Json.Serialization.JsonConverter"/> to the builder.
+	/// </summary>
+	/// <param name="builder"> The extended <see cref="IJsonSettingsSerializerOptionsBuilder"/>. </param>
+	/// <param name="writeOutOptions"> The <see cref="IWriteOutOptions"/> used for writing out enumeration values. </param>
+	/// <returns> An <see cref="IJsonSettingsSerializerOptionsBuilder"/> for chaining. </returns>
+	public static IJsonSettingsSerializerOptionsBuilder WithEnumConverter(this IJsonSettingsSerializerOptionsBuilder builder, IWriteOutOptions writeOutOptions)
+	{
+		return builder.AddConverter(new EnumConverter(new EnumConverterOptions() { WriteOutOptions = writeOutOptions }));
+	}
 }
