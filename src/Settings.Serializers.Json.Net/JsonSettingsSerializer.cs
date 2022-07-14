@@ -20,9 +20,6 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 	#endregion
 
 	#region Fields
-
-	/// <summary> The default <see cref="JsonSerializerOptions"/>. </summary>
-	private static readonly JsonSerializerOptions DefaultJsonSerializerOptions;
 	
 	/// <summary> The <see cref="JsonSerializerOptions"/> used by this handler. </summary>
 	private readonly JsonSerializerOptions _jsonSerializerOptions;
@@ -34,9 +31,28 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 
 	#region (De)Constructors
 
-	static JsonSettingsSerializer()
+	/// <summary>
+	/// Constructor
+	/// </summary>
+	public JsonSettingsSerializer()
+		: this((JsonSerializerOptions?) null) { }
+
+	/// <summary>
+	/// Constructor
+	/// </summary>
+	/// <param name="customJsonConverters"> An optional collection of custom <see cref="System.Text.Json.Serialization.JsonConverter"/>s. </param>
+	public JsonSettingsSerializer(params System.Text.Json.Serialization.JsonConverter[] customJsonConverters)
+		: this(null, customJsonConverters) { }
+
+	/// <summary>
+	/// Constructor
+	/// </summary>
+	/// <param name="jsonSerializerOptions"> Optional <see cref="JsonSerializerOptions"/>. </param>
+	/// <param name="customJsonConverters"> An optional collection of custom <see cref="System.Text.Json.Serialization.JsonConverter"/>s. </param>
+	public JsonSettingsSerializer(JsonSerializerOptions? jsonSerializerOptions = null, params System.Text.Json.Serialization.JsonConverter[] customJsonConverters)
 	{
-		DefaultJsonSerializerOptions = new JsonSerializerOptions()
+		// Save parameters.
+		_jsonSerializerOptions = jsonSerializerOptions ?? new JsonSerializerOptions()
 		{
 			AllowTrailingCommas = true,
 			IgnoreReadOnlyProperties = false,
@@ -44,37 +60,8 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 			ReadCommentHandling = JsonCommentHandling.Skip,
 			WriteIndented = true,
-			Converters =
-			{
-				//! Now dynamically added in the instance constructor.
-				//// Build in:
-				//new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false),
-			}
+			Converters = { /* Dynamically added below. */ }
 		};
-	}
-
-	/// <summary>
-	/// Constructor
-	/// </summary>
-	public JsonSettingsSerializer()
-		: this(DefaultJsonSerializerOptions) { }
-
-	/// <summary>
-	/// Constructor
-	/// </summary>
-	/// <param name="customJsonConverters"> An optional collection of custom <see cref="System.Text.Json.Serialization.JsonConverter"/>s. </param>
-	public JsonSettingsSerializer(params System.Text.Json.Serialization.JsonConverter[] customJsonConverters)
-		: this(DefaultJsonSerializerOptions, customJsonConverters) { }
-
-	/// <summary>
-	/// Constructor
-	/// </summary>
-	/// <param name="jsonSerializerOptions"> Optional <see cref="JsonSerializerOptions"/>. Default will be <see cref="DefaultJsonSerializerOptions"/>. </param>
-	/// <param name="customJsonConverters"> An optional collection of custom <see cref="System.Text.Json.Serialization.JsonConverter"/>s. </param>
-	public JsonSettingsSerializer(JsonSerializerOptions? jsonSerializerOptions = null, params System.Text.Json.Serialization.JsonConverter[] customJsonConverters)
-	{
-		// Save parameters.
-		_jsonSerializerOptions = jsonSerializerOptions ?? DefaultJsonSerializerOptions;
 
 		// Initialize fields.
 		if
