@@ -213,7 +213,7 @@ Those converters support relative path if a _base directory_ has been specified 
 
 #### `EnumConverter`
 
-Contrary to **Microsofts** **JsonStringEnumConverter** this converter can optionally be configured via different `IWriteOutOptions`, to add the values of an enumeration to the serialized settings data..
+Contrary to **Microsofts** **JsonStringEnumConverter** this converter can optionally be configured via different `IWriteOutOptions`, to add the values of an enumeration to the serialized settings data.
 
 The following write-out options are available and applied to below example:
 
@@ -227,7 +227,7 @@ class MySettings : ISettings
 
 - Write-out as suffix to the property value
 
-  Will add the enumeration values with configurable star, end and separator as a suffix to the value.
+  Will add the enumeration values with configurable start, end and separator as a suffix to the value.
 
   ```c#
   var converter = new EnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"));
