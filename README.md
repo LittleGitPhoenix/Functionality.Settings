@@ -76,6 +76,8 @@ var settingsManager = SettingsManager<string>
 		.WithIpAddressConverter()
 		.WithRegexConverter()
 		.WithTimeSpanConverter()
+		.WithVersionConverter()
+		.WithEnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"))
 		.WithDefaultSerializerOptions()
 	.UsingWeakCache()
 	.UsingEncryption()
@@ -185,29 +187,109 @@ var settingsManager = SettingsManager<string>
 
 The package provides special converters that allow for some common types to be used directly within settings classes.
 
-- `FileInfoConverter` and `DirectoryInfoConverter`
+#### `File- and DirectoryInfoConverter`
 
-  Those converters support relative path if a _base directory_ has been specified when creating the converters. If settings are loaded and saved, the converter checks if the path of any **FileInfo** or **DirectoryInfo** property could be expressed as a path relative to the specified _base directory_.
+Those converters support relative path if a _base directory_ has been specified when creating the converters. If settings are loaded and saved, the converter checks if the path of any **FileInfo** or **DirectoryInfo** property could be expressed as a path relative to the specified _base directory_.
 
-  <div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
-  	<span style='margin-left:1em; text-align:left'>
-      	<b>Information</b>
-      </span>
-      <br>
-  	<div style='margin-left:1em; margin-right:1em;'>
-  		Relative path are only supported with up to three parent folders (e.g <b>../../.../MyFolder/Some.file</b>). Other files will be saved as absolute path.
-      </div>
-  </div>
+<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
+	<span style='margin-left:1em; text-align:left'>
+    	<b>Information</b>
+    </span>
+    <br>
+	<div style='margin-left:1em; margin-right:1em;'>
+		Relative path are only supported with up to three parent folders (e.g <b>../../.../MyFolder/Some.file</b>). Other files will be saved as absolute path.
+    </div>
+</div>
 
-- `IpAddressConverter`
+#### `IpAddressConverter`
 
-- `RegexConverter`
+#### `RegexConverter`
 
-- `TimeSpanConverter`
+#### `TimeSpanConverter`
 
   The string representation of a **TimeSpan** is in **milliseconds**.
 
-- `VersionConverter`
+#### `VersionConverter`
+
+#### `EnumConverter`
+
+Contrary to **Microsofts** **JsonStringEnumConverter** this converter can optionally be configured via different `IWriteOutOptions`, to add the values of an enumeration to the serialized settings data.
+
+The following write-out options are available and applied to below example:
+
+```c#
+class MySettings : ISettings
+{
+	public MyEnum First { get; init; } = MyEnum.Default;
+	public MyEnum Second { get; init; } = MyEnum.Default;
+}
+```
+
+- Write-out as suffix to the property value
+
+  Will add the enumeration values with configurable start, end and separator as a suffix to the value.
+
+  ```c#
+  var converter = new EnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"));
+  var serializer = new JsonSettingsSerializer(converter);
+  var settingsData = serializer.Serialize(settings);
+  ```
+
+  ```json
+  {
+  	"first": "Entry1 [Default;Entry1;Entry2]",
+  	"second": "Entry2 [Default;Entry1;Entry2]"
+  }
+  ```
+
+- Write-out as comment
+
+  Will add the enumeration values with configurable separator as a single comment below the serialized property. Due to limitations of the **JsonStringEnumConverter** the comment cannot be added above the property.
+
+  ```c#
+  var converter = new EnumConverter(WriteOutValues.AsComment(separator: ";"));
+  var serializer = new JsonSettingsSerializer(converter);
+  var settingsData = serializer.Serialize(settings);
+  ```
+
+  ```json
+  {
+  	"first": "Entry1"
+  	/*Default;Entry1;Entry2*/,
+  	"second": "Entry2"
+  	/*Default;Entry1;Entry2*/
+  }
+  ```
+
+- Write out as separate property
+
+	Will add the enumeration values as an additional property below the serialized property. Due to limitations of the **JsonStringEnumConverter** the name of the additional property cannot correspond to the name of the serialized property and is a generic one based on the enumerations type appended by a random number to keep the JSON valid.
+
+	```c#
+	var converter = new EnumConverter(WriteOutValues.AsProperty());
+	var serializer = new JsonSettingsSerializer(converter);
+	var settingsData = serializer.Serialize(settings);
+	```
+
+	```json
+	{
+		"first": "Entry1",
+		"Values_for_MyEnum_45319": [
+			"Default",
+			"Entry1",
+			"Entry2"
+		],
+		"second": "Entry2",
+		"Values_for_MyEnum_13705": [
+			"Default",
+			"Entry1",
+			"Entry2"
+		]
+	}
+	```
+	
+	
+
 ___
 
 # Implementations of `ISettingsCache`

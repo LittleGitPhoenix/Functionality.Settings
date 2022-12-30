@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ___
 
-## 3.1.0 (2022-05-10)
+## 3.1.0
+
+:calendar: _2022-05-10_
 
 ### Added
 
@@ -18,7 +20,9 @@ ___
 - Saving settings inside the `ISettingsLayoutChangedNotification.LayoutChanged` callback failed because `ISettings.InitializeExtensionMethods()` was called after the callback was invoked.
 ___
 
-## 3.0.0 (2022-02-12)
+## 3.0.0
+
+:calendar: _2022-02-12_
 
 > Version **3.x** introduces a new concept off settings handling and made a breaking change necessary. More can be found in the [**README.md**](../../../README.md)
 
@@ -39,7 +43,9 @@ ___
 - ~~Settings.Json.Newtonsoft~~: This has been deprecated in **v2.0.0** and is now completely removed
 ___
 
-## 2.1.0 (2022-01-15)
+## 2.1.0
+
+:calendar: _2022-01-15_
 
 ### Added
 
@@ -55,7 +61,9 @@ ___
 - The `SettingsTypeMismatchException` has been marked obsolete as it is no longer used.
 ___
 
-## 2.0.0 (2021-11-01)
+## 2.0.0
+
+:calendar: _2021-11-01_
 
 ### Changed
 
@@ -66,13 +74,17 @@ ___
 - The `SettingsManager` interface does no longer expose an `ISettingsCache`via the `Cache` property. Caching is now an internal implementation detail.
 ___
 
-## 1.1.0 (2020-02-09)
+## 1.1.0
+
+:calendar: _2020-02-09_
 
 ### Added
 
 - Added extension methods `Save` and `Reload` to the `ISettings` interface. Those will only work, if the corresponding settings instance has been linked to an `ISettingsManager` via the `SettingsExtensions.InitializeExtensionMethods` method. When loading settings via any of the provided `SettingsManager` implementations, linking is done automatically.
 ___
 
-## 1.0.0 (2019-10-12)
+## 1.0.0
+
+:calendar: _2019-10-12_
 
 - Initial release

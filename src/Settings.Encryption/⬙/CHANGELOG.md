@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ___
 
-## 3.1.0 (2022-05-10)
+## 3.1.0
+
+:calendar: _2022-05-10_
 
 ### Added
 
@@ -16,21 +18,27 @@ ___
 :large_blue_circle: Phoenix.Functionality.Settings  ~~3.0.0~~ → **3.1.0**
 ___
 
-## 3.0.0 (2022-02-12)
+## 3.0.0
+
+:calendar: _2022-02-12_
 
 ### Added
 
 - The new `UsingEncryption` extension method that can be used with the overhauled builder pattern of **Phoenix.Functionality.Settings.Encryption v3.x**.
 ___
 
-## 2.3.0 (2022-01-15)
+## 2.3.0
+
+:calendar: _2022-01-15_
 
 ### Added
 
 - The project now natively supports **.NET 6**.
 ___
 
-## 2.2.0 (2021-12-16)
+## 2.2.0
+
+:calendar: _2021-12-16_
 
 ### Added
 
@@ -41,7 +49,9 @@ ___
 - Detecting **.NET** build-in types failed when running an application published as single-file executable because in those cases neither **Type.Module.FullyQualifiedName** nor **Type.Assembly.Location** are set and therefore cannot be used to check if a type is from the framework itself. Since this cannot be bypassed in another way, now all types whose assembly/module starts with **System.** are treated as build-in. For cases where this leads to undesired behavior, the two new attributes `EncryptForceFollowAttribute` and `EncryptDoNotFollowAttribute` have been created.
 ___
 
-## 2.1.0 (2021-12-11)
+## 2.1.0
+
+:calendar: _2021-12-11_
 
 ### Added
 
@@ -56,7 +66,9 @@ ___
 	- Custom classes inheriting from **IList<>**
 ___
 
-## 2.0.0 (2021-11-01)
+## 2.0.0
+
+:calendar: _2021-11-01_
 
 - Initial release
 
