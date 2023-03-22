@@ -280,6 +280,28 @@ public class SettingsManagerTest
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Never);
 	}
 
+	/// <summary>
+	/// Checks that loading unavailable settings with the <b>preventCreation</b> parameter set to <b>true</b> throws the <see cref="SettingsUnavailableException"/>.
+	/// </summary>
+	[Test]
+	public void Check_Load_Throws_If_Settings_Data_Is_Unavailable()
+	{
+		// Arrange
+		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
+		Mock.Get(sink)
+			.Setup(mock => mock.Retrieve<Settings>())
+			.Returns((string?) null) //! This needs to return null to simulate unavailable settings.
+			.Verifiable()
+			;
+		_fixture.Inject(sink);
+		var serializer = _fixture.Create<Mock<ISettingsSerializer<string>>>().Object;
+		_fixture.Inject(serializer);
+		var manager = _fixture.Create<Mock<SettingsManager<string>>>().Object;
+		
+		// Act + Assert
+		Assert.Catch<SettingsUnavailableException>(() => manager.Load<Settings>(preventCreation: true));
+	}
+
 	[Test]
 	public void Check_Load_Uses_Existing_Data()
 	{
