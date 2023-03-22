@@ -175,6 +175,8 @@ var settingsManager = SettingsManager<string>
 		.WithIpAddressConverter()
 		.WithRegexConverter()
 		.WithTimeSpanConverter()
+		.WithVersionConverter()
+		.WithEnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"))
 		.WithDefaultSerializerOptions()
 	// <--
 	.AddCache(...)
