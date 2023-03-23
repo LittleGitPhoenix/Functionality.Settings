@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ___
 
+## 3.2.0
+
+:calendar: _2023-03-??_
+
+### Changed
+
+- When loading `ISettings` with the `ISettingsManager.Load` function having the `preventCreation` parameter set to **true**, the new `SettingsUnavailableException` may be thrown if no settings data is available. This can be used for settings migrations. The new exception `SettingsUnavailableException` inherits from `SettingsLoadException` and therefore does not break existing implementations.
+
+___
+
 ## 3.1.0
 
 :calendar: _2022-05-10_
