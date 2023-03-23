@@ -40,6 +40,11 @@ public class EnumConverterTest
 		public MyEnum Second { get; init; } = MyEnum.Default;
 	}
 
+	class MyNullableSettings : ISettings
+	{
+		public MyEnum? First { get; init; } = null;
+	}
+
 	enum MyEnum
 	{
 		Default,
@@ -80,18 +85,28 @@ public class EnumConverterTest
 	#region Tests
 
 	#region Helper
-
+	
 	[Test]
-	[TestCase(typeof(MyEnum), MyEnum.Default)]
-	[TestCase(typeof(MyEnumWithoutDefault), MyEnumWithoutDefault.First)]
-	[TestCase(typeof(MyEnumWithDefaultAttribute), MyEnumWithDefaultAttribute.Default)]
-	public void GetDefaultEnumerationValue(Type enumerationType, object target)
+	[TestCase(MyEnum.Default)]
+	[TestCase(MyEnumWithoutDefault.First)]
+	[TestCase(MyEnumWithDefaultAttribute.Default)]
+	public void GetDefaultEnumerationValue<TEnum>(TEnum target)
 	{
 		// Act
-		var defaultValue = EnumConverter.InternalEnumConverter.GetDefaultValue(enumerationType);
+		var defaultValue = EnumConverter.InternalEnumConverter<TEnum>.GetDefaultValue();
 
 		// Assert
-		Assert.AreEqual(target, defaultValue);
+		Assert.That(defaultValue, Is.EqualTo(target));
+	}
+
+	[Test]
+	public void GetDefaultValueForNullableEnumeration()
+	{
+		// Act
+		var defaultValue = EnumConverter.InternalEnumConverter<MyEnum?>.GetDefaultValue();
+
+		// Assert
+		Assert.That(defaultValue, Is.Null);
 	}
 
 	#endregion
@@ -102,102 +117,111 @@ public class EnumConverterTest
 	public void DeserializeEnumeration()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum>();
 		var value = nameof(MyEnum.Default);
 		var target = MyEnum.Default;
-		var type = target.GetType();
-
+		
 		// Act
-		var actual = converter.Deserialize(value, type);
-			
+		var actual = converter.Deserialize(value);
+
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	[Test]
 	public void DeserializeEnumerationCleansWriteOut()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum>();
 		var value = $"{nameof(MyEnum.Entry2)}{MyEnumSuffix}";
 		var target = MyEnum.Entry2;
-		var type = target.GetType();
 
 		// Act
-		var actual = converter.Deserialize(value, type);
+		var actual = converter.Deserialize(value);
 
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	[Test]
 	public void DeserializeFlagsEnumeration()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyFlags>();
 		var value = $"{nameof(MyFlags.Me)}, {nameof(MyFlags.Myself)}, {nameof(MyFlags.I)}";
 		var target = MyFlags.Me | MyFlags.Myself | MyFlags.I;
-		var type = target.GetType();
-
+		
 		// Act
-		var actual = converter.Deserialize(value, type);
-			
+		var actual = converter.Deserialize(value);
+
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	[Test]
 	public void DeserializeFlagsEnumerationCleansWriteOut()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyFlags>();
 		var value = $"{nameof(MyFlags.Me)}, {nameof(MyFlags.Myself)}, {nameof(MyFlags.I)}{MyFlagsSuffix}";
 		var target = MyFlags.Me | MyFlags.Myself | MyFlags.I;
-		var type = target.GetType();
-
+		
 		// Act
-		var actual = converter.Deserialize(value, type);
+		var actual = converter.Deserialize(value);
 
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	[Test]
 	public void DeserializeEnumerationIsCaseInsensitive()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum>();
 		var value = nameof(MyEnum.Default).ToLower();
 		var target = MyEnum.Default;
-		var type = target.GetType();
-
+		
 		// Act
-		var actual = converter.Deserialize(value, type);
-			
+		var actual = converter.Deserialize(value);
+
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	[Test]
 	public void DeserializeNullableEnumeration()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum?>(); //! Nullable
 		var value = nameof(MyEnum.Default);
 		var target = (MyEnum?) MyEnum.Default;
-		var type = typeof(MyEnum?); //! nullable
-
+		
 		// Act
-		var actual = converter.Deserialize(value, type);
-			
+		var actual = converter.Deserialize(value);
+
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
+	}
+
+	/// <summary> Checks that converting a null-string into a <see cref="Enum?"/> succeeds. </summary>
+	[Test]
+	public void DeserializeNullableEnumProperty()
+	{
+		// Arrange
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum?>(); //! Nullable
+		var value = (string?) null;
+
+		// Act
+		var actual = converter.Deserialize(value);
+		
+		//Assert
+		Assert.That(actual, Is.Null);
 	}
 
 	/// <summary> Checks that converting <b>null</b> or empty strings into an <see cref="Enum"/> will return <b>null</b>, if the target type is nullable. </summary>
@@ -207,16 +231,15 @@ public class EnumConverterTest
 	public void DeserializeEnumerationReturnsNull(string? value)
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum?>(); //! Nullable
 		var target = (MyEnum?) null;
-		var type = typeof(MyEnum?); //! nullable
-
+		
 		// Act
-		var actual = converter.Deserialize(value, type);
-			
+		var actual = converter.Deserialize(value);
+
 		// Assert
 		Assert.Null(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	/// <summary> Checks that converting <b>null</b> or empty strings into an <see cref="Enum"/> will return the enumerations default value, if the target type is not nullable. </summary>
@@ -226,16 +249,15 @@ public class EnumConverterTest
 	public void DeserializeEnumerationReturnsDefault(string? value)
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum>();
 		var target = MyEnum.Default;
-		var type = typeof(MyEnum); //! not-nullable
-
+		
 		// Act
-		var actual = converter.Deserialize(value, type);
-			
+		var actual = converter.Deserialize(value);
+
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	/// <summary> Checks that converting <b>null</b> or empty strings into an <see cref="Enum"/> will return the enumerations first value, if the target type is not nullable and the enum does not provide a default value. </summary>
@@ -245,16 +267,15 @@ public class EnumConverterTest
 	public void DeserializeEnumerationThrowsBecauseNoDefault(string? value)
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnumWithoutDefault>();
 		var target = MyEnumWithoutDefault.First;
-		var type = typeof(MyEnumWithoutDefault); //! not-nullable
-
+		
 		// Act + Assert
-		var actual = converter.Deserialize(value, type);
-			
+		var actual = converter.Deserialize(value);
+
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	/// <summary> Checks that converting a string that is not defined within an <see cref="Enum"/> will throw. </summary>
@@ -262,24 +283,59 @@ public class EnumConverterTest
 	public void DeserializeEnumerationThrowsIfNotDefined()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum>();
 		var value = "not_defined";
 		var target = MyEnum.Default;
-		var type = typeof(MyEnum);
-
+		
 		// Act + Assert
-		Assert.Catch<System.Text.Json.JsonException>(() => converter.Deserialize(value, type));
+		Assert.Catch<System.Text.Json.JsonException>(() => converter.Deserialize(value));
+	}
+
+	[Test]
+	public void DeserializeNullableEnumPropertyInSettings()
+	{
+		// Arrange
+		//var options = new EnumConverterOptions() {WriteOutOptions = WriteOutValues.AsSuffix()};
+		var converter = new EnumConverter(/*options*/);
+		var serializer = new JsonSettingsSerializer(converter);
+		
+		//var settingsData = @"{""First"": null, ""Second"": ""Entry2""}";
+		var settingsData = @"{""First"": null}";
+		
+		// Act
+		var settings = serializer.Deserialize<MyNullableSettings>(settingsData);
+		
+		// Assert
+		Assert.That(settings, Is.Not.Null);
+		Assert.That(settings!.First, Is.Null);
+	}
+
+	[Test]
+	public void DeserializeEnumPropertyInSettings()
+	{
+		// Arrange
+		var converter = new EnumConverter();
+		var serializer = new JsonSettingsSerializer(converter);
+		var settingsData = @"{""First"": ""Entry1"", ""Second"": ""Entry2""}";
+		
+		// Act
+		var settings = serializer.Deserialize<MySettings>(settingsData);
+		
+		// Assert
+		Assert.That(settings, Is.Not.Null);
+		Assert.That(settings!.First, Is.EqualTo(MyEnum.Entry1));
+		Assert.That(settings!.Second, Is.EqualTo(MyEnum.Entry2));
 	}
 
 	#endregion
 
 	#region Serialize
-	
+
 	[Test]
 	public void SerializeEnumeration()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum>();
 		var value = MyEnum.Entry1;
 		var target = nameof(MyEnum.Entry1);
 
@@ -288,14 +344,14 @@ public class EnumConverterTest
 
 		// Assert
 		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	[Test]
 	public void SerializeEnumerationWithWriteOut()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter(new EnumConverterOptions() {WriteOutOptions = WriteOutValues.AsSuffix()});
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum>(new EnumConverterOptions() { WriteOutOptions = WriteOutValues.AsSuffix() });
 		var value = MyEnum.Entry1;
 		var target = $"{nameof(MyEnum.Entry1)}{MyEnumSuffix}";
 
@@ -303,15 +359,14 @@ public class EnumConverterTest
 		var actual = converter.Serialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	[Test]
 	public void SerializeNullEnumeration()
 	{
 		// Arrange
-		var converter = new EnumConverter.InternalEnumConverter();
+		var converter = new EnumConverter.InternalEnumConverter<MyEnum?>();
 		var value = (MyEnum?) null;
 		var target = (string?) null;
 
@@ -320,7 +375,7 @@ public class EnumConverterTest
 
 		// Assert
 		Assert.Null(actual);
-		Assert.AreEqual(target, actual);
+		Assert.That(actual, Is.EqualTo(target));
 	}
 
 	[Test]
@@ -335,46 +390,58 @@ public class EnumConverterTest
 		var settingsData = serializer.Serialize(settings);
 		Console.WriteLine(settingsData);
 		Assert.That(settingsData, Is.Not.Empty);
+		Assert.That(settingsData, Does.Contain($"\"{nameof(MySettings.First)}\"").IgnoreCase);
+		Assert.That(settingsData, Does.Contain($"\"{nameof(MyEnum.Entry1)} [").IgnoreCase);
+		Assert.That(settingsData, Does.Contain($"\"{nameof(MySettings.Second)}\"").IgnoreCase);
+		Assert.That(settingsData, Does.Contain($"\"{nameof(MyEnum.Entry2)} [").IgnoreCase);
 		
 		// Assert + Assert
 		var deserializedSettings = serializer.Deserialize<MySettings>(settingsData);
 		Assert.NotNull(deserializedSettings);
+		Assert.That(deserializedSettings!.First, Is.EqualTo(settings.First));
+		Assert.That(deserializedSettings!.Second, Is.EqualTo(settings.Second));
 	}
 
 	[Test]
-	public void SerializeAndDeserializeWithWriteOutAsComment()
+	public void SerializeAndDeserializeWithWriteOutAsSuffixForNullableEnumeration()
 	{
 		// Arrange
-		var converter = new EnumConverter(WriteOutValues.AsComment(separator: ";"));
+		var converter = new EnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"));
 		var serializer = new JsonSettingsSerializer(converter);
-		var settings = new MySettings() { First = MyEnum.Entry1, Second = MyEnum.Entry2 };
+		var settings = new MyNullableSettings() { First = null };
 
 		// Act + Assert
 		var settingsData = serializer.Serialize(settings);
 		Console.WriteLine(settingsData);
 		Assert.That(settingsData, Is.Not.Empty);
+		Assert.That(settingsData, Does.Contain(nameof(MyNullableSettings.First)).IgnoreCase);
+		Assert.That(settingsData, Does.Contain("null").IgnoreCase);
 		
 		// Assert + Assert
-		var deserializedSettings = serializer.Deserialize<MySettings>(settingsData);
+		var deserializedSettings = serializer.Deserialize<MyNullableSettings>(settingsData);
 		Assert.NotNull(deserializedSettings);
+		Assert.That(deserializedSettings!.First, Is.EqualTo(settings.First));
 	}
-
+	
 	[Test]
-	public void SerializeAndDeserializeWithWriteOutAsProperty()
+	public void SerializedNullableEnumPropertyDoesNotHaveQuatationMarks()
 	{
 		// Arrange
-		var converter = new EnumConverter(WriteOutValues.AsProperty());
+		var converter = new EnumConverter();
 		var serializer = new JsonSettingsSerializer(converter);
-		var settings = new MySettings() { First = MyEnum.Entry1, Second = MyEnum.Entry2 };
+		var settings = new MyNullableSettings() { First = null };
 
 		// Act + Assert
 		var settingsData = serializer.Serialize(settings);
 		Console.WriteLine(settingsData);
 		Assert.That(settingsData, Is.Not.Empty);
+		Assert.That(settingsData, Does.Contain("null")); //! Must contain a pure null without quotation marks.
+		Assert.That(settingsData, Does.Not.Contain("\"null\""));
 		
 		// Assert + Assert
-		var deserializedSettings = serializer.Deserialize<MySettings>(settingsData);
+		var deserializedSettings = serializer.Deserialize<MyNullableSettings>(settingsData);
 		Assert.NotNull(deserializedSettings);
+		Assert.That(deserializedSettings!.First, Is.EqualTo(settings.First));
 	}
 
 	#endregion

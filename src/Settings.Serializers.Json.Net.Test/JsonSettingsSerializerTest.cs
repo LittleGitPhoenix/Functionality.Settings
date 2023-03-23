@@ -212,9 +212,9 @@ public class JsonSettingsSerializerTest
 	/// Checks that the <see cref="System.Text.Json.Serialization.JsonStringEnumConverter"/> is not added, if another enum converter is available.
 	/// </summary>
 	[Test]
-	[TestCase(typeof(EnumConverter.InternalEnumConverter))]
+	[TestCase(typeof(EnumConverter))]
 	[TestCase(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
-	public void Check_Default_Json_Converter_Is_Not_Added(Type enumConverterType) /*where T : class, new()*/
+	public void Check_Default_Json_Converter_Is_Not_Added(Type enumConverterType)
 	{
 		// Arrange
 		var enumConverter = (System.Text.Json.Serialization.JsonConverter) _fixture.Create(enumConverterType, new AutoFixture.Kernel.SpecimenContext(_fixture));
