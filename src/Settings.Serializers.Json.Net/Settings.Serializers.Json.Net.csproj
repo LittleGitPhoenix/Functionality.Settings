@@ -7,10 +7,10 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AssemblyName>Phoenix.Functionality.Settings.Serializers.Json.Net</AssemblyName>
 		<RootNamespace>Phoenix.Functionality.Settings.Serializers.Json.Net</RootNamespace>
-		<Version>3.2.0</Version>
+		<Version>3.3.0</Version>
 		<Authors>Felix Leistner</Authors>
 		<Company>Little Phoenix</Company>
-		<Copyright>2022</Copyright>
+		<Copyright>2023</Copyright>
 		<Description>JSON based implementation for the common settings infastructure using JsonSerializer.</Description>
 		<PackageId>Phoenix.Functionality.Settings.Serializers.Json.Net</PackageId>
 		<Product>Phoenix.Functionality.Settings.Serializers.Json.Net</Product>

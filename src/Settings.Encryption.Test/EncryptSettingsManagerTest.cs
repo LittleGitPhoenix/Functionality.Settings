@@ -159,7 +159,7 @@ public class EncryptSettingsManagerTest
 	[TestCase(typeof(object[]), false)]
 	[TestCase(typeof(IPAddress), false)]
 	[TestCase(typeof(NestedSettings.Inner), true)]
-	public void Check_Is_Treated_As_Nested(Type nestedType, bool shouldBeTreatedAsCollection)
+	public void Is_Treated_As_Nested(Type nestedType, bool shouldBeTreatedAsCollection)
 	{
 		// Act
 		var isNested = EncryptSettingsManager.IsNested(nestedType);
@@ -173,7 +173,7 @@ public class EncryptSettingsManagerTest
 	[TestCase(typeof(Dictionary<object, object>), false)]
 	[TestCase(typeof(List<object>), true)]
 	[TestCase(typeof(object[]), true)]
-	public void Check_Is_Treated_As_Collection(Type collectionType, bool shouldBeTreatedAsCollection)
+	public void Is_Treated_As_Collection(Type collectionType, bool shouldBeTreatedAsCollection)
 	{
 		// Act
 		var isCollection = EncryptSettingsManager.IsCollection(collectionType);
@@ -183,7 +183,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_System_Namespace_Is_Ignored()
+	public void System_Namespace_Is_Ignored()
 	{
 		Assert.Ignore("This would need a custom assembly name 'System.[...].dll' which is currently not implemented.");
 		//// Arrange
@@ -197,7 +197,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_EncryptDoNotFollowAttribute_Overrules()
+	public void EncryptDoNotFollowAttribute_Overrules()
 	{
 		// Arrange
 		var settings = new DontFollowSettings();
@@ -210,7 +210,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_EncryptForceFollowAttribute_Overrules()
+	public void EncryptForceFollowAttribute_Overrules()
 	{
 		Assert.Ignore("This would need a custom assembly name 'System.[...].dll' which is currently not implemented.");
 		//// Arrange
@@ -225,7 +225,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Relevant_Properties_Are_Filtered()
+	public void Relevant_Properties_Are_Filtered()
 	{
 		// Arrange
 		var settings = new MultiplePropertiesSettings();
@@ -245,7 +245,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Nested_Properties_Are_Filtered()
+	public void Nested_Properties_Are_Filtered()
 	{
 		// Arrange
 		var settings = new NestedSettings();
@@ -259,7 +259,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Settings_With_Properties_That_Throw_Can_Be_Handled()
+	public void Settings_With_Properties_That_Throw_Can_Be_Handled()
 	{
 		// Arrange
 		var settings = new ThrowingSettings();
@@ -270,19 +270,19 @@ public class EncryptSettingsManagerTest
 
 	[Test]
 	[Category("Encrypted Collection Test")]
-	public void Check_Simple_Array_Handling() => this.CheckCollectionHandling<SimpleArraySettings>(2);
+	public void Simple_Array_Handling() => this.CheckCollectionHandling<SimpleArraySettings>(2);
 
 	[Test]
 	[Category("Encrypted Collection Test")]
-	public void Check_Simple_List_Handling() => this.CheckCollectionHandling<SimpleListSettings>(2);
+	public void Simple_List_Handling() => this.CheckCollectionHandling<SimpleListSettings>(2);
 
 	[Test]
 	[Category("Encrypted Collection Test")]
-	public void Check_Stacked_List_Handling() => this.CheckCollectionHandling<StackedListSettings>(6);
+	public void Stacked_List_Handling() => this.CheckCollectionHandling<StackedListSettings>(6);
 
 	[Test]
 	[Category("Encrypted Collection Test")]
-	public void Check_Nested_List_Handling() => this.CheckCollectionHandling<NestedListSettings>(3);
+	public void Nested_List_Handling() => this.CheckCollectionHandling<NestedListSettings>(3);
 
 	private void CheckCollectionHandling<TSettings>(int amountOfProperties) where TSettings : new()
 	{
@@ -301,7 +301,7 @@ public class EncryptSettingsManagerTest
 	#region En-/Decryption
 		
 	[Test]
-	public void Check_Unencrypted_Property_Is_Same()
+	public void Unencrypted_Property_Is_Same()
 	{
 		// Arrange
 		var underlyingSettingsManager = _fixture.Create<Mock<ISettingsManager>>().Object;
@@ -324,7 +324,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Null_Property_Is_Same()
+	public void Null_Property_Is_Same()
 	{
 		// Arrange
 		var underlyingSettingsManager = _fixture.Create<Mock<ISettingsManager>>().Object;
@@ -347,7 +347,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Null_Is_Not_Encrypted()
+	public void Null_Is_Not_Encrypted()
 	{
 		// Arrange
 		string? unencrypted = null;
@@ -376,7 +376,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Value_Is_Encrypted_Upon_Save()
+	public void Value_Is_Encrypted_Upon_Save()
 	{
 		// Arrange
 		string? unencrypted = "unencrypted";
@@ -412,7 +412,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Value_Is_Still_Decrypted_After_Save()
+	public void Value_Is_Still_Decrypted_After_Save()
 	{
 		// Arrange
 		string? unencrypted = "unencrypted";
@@ -441,7 +441,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Nested_Property_Is_Decrypted()
+	public void Nested_Property_Is_Decrypted()
 	{
 		// Arrange
 		var unencrypted = "unencrypted";
@@ -458,7 +458,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Nested_Property_Is_Encrypted()
+	public void Nested_Property_Is_Encrypted()
 	{
 		// Arrange
 		var unencrypted = "unencrypted";
@@ -474,7 +474,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Simple_Array_Property_Is_Encrypted()
+	public void Simple_Array_Property_Is_Encrypted()
 	{
 		// Arrange
 		var unencrypted = "unencrypted";
@@ -491,7 +491,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Simple_List_Property_Is_Encrypted()
+	public void Simple_List_Property_Is_Encrypted()
 	{
 		// Arrange
 		var unencrypted = "unencrypted";
@@ -508,7 +508,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Stacked_List_Property_Is_Encrypted()
+	public void Stacked_List_Property_Is_Encrypted()
 	{
 		// Arrange
 		var unencrypted = "unencrypted";
@@ -534,7 +534,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_True_Is_Returned_If_Not_All_Properties_Are_Encrypted()
+	public void True_Is_Returned_If_Not_All_Properties_Are_Encrypted()
 	{
 		// Arrange
 		var unencrypted = "unencrypted";
@@ -550,7 +550,7 @@ public class EncryptSettingsManagerTest
 	}
 
 	[Test]
-	public void Check_False_Is_Returned_If_All_Properties_Are_Encrypted()
+	public void False_Is_Returned_If_All_Properties_Are_Encrypted()
 	{
 		// Arrange
 		var encryptedText = "3DX19APzlJKi5kK0YlUjp1ZDNeQF9fDeN7bfsddBDKhX7w+jhw==";

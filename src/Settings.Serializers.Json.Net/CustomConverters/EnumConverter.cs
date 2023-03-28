@@ -25,12 +25,6 @@ internal record NoValueWriteOut : IWriteOutOptions;
 /// <inheritdoc cref="WriteOutValues.AsSuffix"/>
 internal record ValueWriteOutAsSuffix(string Start, string Separator, string End) : IWriteOutOptions;
 
-/// <inheritdoc cref="WriteOutValues.AsComment"/>
-public record ValueWriteOutAsComment(string Separator) : IWriteOutOptions;
-
-/// <inheritdoc cref="WriteOutValues.AsProperty"/>
-public record ValueWriteOutAsProperty : IWriteOutOptions;
-
 /// <summary>
 /// Helper for creating different <see cref="IWriteOutOptions"/>.
 /// </summary>
@@ -45,24 +39,6 @@ public static class WriteOutValues
 	/// <returns> A new <see cref="IWriteOutOptions"/> instance. </returns>
 	public static IWriteOutOptions AsSuffix(string? start = "[", string? separator = ", ", string? end = "]")
 		=> new ValueWriteOutAsSuffix(start ?? "[", separator ?? ", ", end ?? "]");
-
-	/// <summary>
-	/// Enumeration values will be serialized as comment after the property value.
-	/// </summary>
-	/// <param name="separator"> The string used as separator for the values. Default is <b>, </b> </param>
-	[Obsolete("It is currently not advised to use this method of enumeration value write-out, because comments are not part of the JSON specification and due limits imposed by System.Text.Json that prevent from writing comments above a property.")]
-	public static IWriteOutOptions AsComment(string? separator = ", ")
-		=> new ValueWriteOutAsComment(separator ?? ", ");
-
-	/// <summary> Enumeration values will be serialized in a separate property as an array below the property of the enumeration. </summary>
-	/// <remarks>
-	/// <para> It is currently not advised to use this method of enumeration value write-out. </para>
-	/// <para> Due to limitations of <see cref="System.Text.Json"/> serializer, the additional property will be named after the enumeration type, rather then the original property name. </para>
-	/// <para> Additionally the property will be suffixed by a random number, to prevent duplicate keys in the final JSON. </para>
-	/// </remarks>
-	[Obsolete("It is currently not advised to use this method of enumeration value write-out, because System.Text.Json does not provide access to the original property name during serialization.")]
-	public static IWriteOutOptions AsProperty()
-		=> new ValueWriteOutAsProperty();
 }
 
 /// <summary>
@@ -70,16 +46,14 @@ public static class WriteOutValues
 /// </summary>
 public class EnumConverter : JsonConverterFactory
 {
-	private readonly Lazy<InternalEnumConverter> _converter;
+	private readonly EnumConverterOptions? _options;
 
 	/// <summary>
 	/// Constructor
 	/// </summary>
 	/// <param name="writeOutOptions"> The <see cref="IWriteOutOptions"/> used for writing out enumeration values. </param>
 	public EnumConverter(IWriteOutOptions writeOutOptions)
-	{
-		_converter = new Lazy<InternalEnumConverter>(() => new InternalEnumConverter(new EnumConverterOptions() { WriteOutOptions = writeOutOptions }), LazyThreadSafetyMode.ExecutionAndPublication);
-	}
+	: this(new EnumConverterOptions() { WriteOutOptions = writeOutOptions }) { }
 
 	/// <summary>
 	/// Constructor
@@ -87,88 +61,133 @@ public class EnumConverter : JsonConverterFactory
 	/// <param name="options"> The <see cref="EnumConverterOptions"/> used for (de)serialization. </param>
 	public EnumConverter(EnumConverterOptions? options = null)
 	{
-		_converter = new Lazy<InternalEnumConverter>(() => new InternalEnumConverter(options), LazyThreadSafetyMode.ExecutionAndPublication);
+		_options = options;
 	}
 
 	/// <inheritdoc />
 	public override bool CanConvert(Type typeToConvert)
 	{
 		if (typeToConvert.IsEnum) return true;
-		if (typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(Nullable<>)) return typeToConvert.GenericTypeArguments.First().IsEnum;
-		return false;
+		return Nullable.GetUnderlyingType(typeToConvert)?.IsEnum ?? false;
 	}
 
 	/// <inheritdoc />
-	public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+	public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions _) => CreateConverter(typeToConvert, _options);
+
+	internal static JsonConverter CreateConverter(Type typeToConvert, EnumConverterOptions? options)
 	{
-		return _converter.Value;
+		//? Use a cache per enum type?
+		//* Depending on the amount of same enumeration types, this may be beneficial. On the other hand it may keep converter instances alive, that are only used one time.
+		var converter = Activator.CreateInstance(typeof(InternalEnumConverter<>).MakeGenericType(typeToConvert), args: options);
+		return (JsonConverter) converter;
 	}
 
 	#region Nested Types
-	
+
+	/// <summary>
+	/// Provides static properties for the generic <see cref="InternalEnumConverter{TEnum}"/>.
+	/// </summary>
+	internal class InternalEnumConverterHelper
+	{
+		internal static readonly Random Random;
+
+		/// <summary>
+		/// Matches the first whitespace not preceded by a comma and everything afterwards.
+		/// </summary>
+		internal static readonly Regex ValueCleanRegEx;
+
+		static InternalEnumConverterHelper()
+		{
+			Random = new Random();
+			ValueCleanRegEx = new Regex(@"(?<!,) .*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		}
+	}
+
 	/// <summary>
 	/// Custom json converter for <see cref="Enum"/>s.
 	/// </summary>
-	internal class InternalEnumConverter : JsonConverter<Enum>
+	internal class InternalEnumConverter<TEnum> : JsonConverter<TEnum>
 	{
-		private static readonly Random Random;
-		
-		private static readonly Regex ValueCleanRegEx;
-	
+		#region Delegates / Events
+		#endregion
+
+		#region Constants
+		#endregion
+
+		#region Fields
+
 		private readonly EnumConverterOptions _options;
 
-		static InternalEnumConverter()
-		{
-			Random = new Random();
-			ValueCleanRegEx = new Regex(@"(?<!,) .*", RegexOptions.Compiled | RegexOptions.IgnoreCase); // Matches the first whitespace not preceded by a comma and everything afterwards.
-		}
+		private readonly Type _enumType;
+		
+		private readonly bool _isNullable;
 
+		private readonly object? _defaultValue;
+
+		#endregion
+
+		#region Properties
+		
+		/// <inheritdoc />
+		/// <remarks> https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/converters-how-to?pivots=dotnet-6-0#handle-null-values </remarks>
+		public override bool HandleNull => true;
+
+		#endregion
+
+		#region (De)Constructors
+		
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		/// <param name="options"> The <see cref="EnumConverterOptions"/> used for (de)serialization. </param>
 		public InternalEnumConverter(EnumConverterOptions? options = null)
 		{
+			// Save parameters.
 			_options = options ?? new EnumConverterOptions();
+
+			// Initialize fields.
+			_enumType = Nullable.GetUnderlyingType(typeof(TEnum)) ?? typeof(TEnum);
+			_defaultValue = GetDefaultValue();
+			_isNullable = _defaultValue is null;
 		}
+
+		#endregion
+
+		#region Methods
 
 		#region Deserialization
 
 		/// <inheritdoc />
-		public override Enum? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			=> this.Deserialize(reader.GetString(), typeToConvert);
+		public override TEnum? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			=> this.Deserialize(reader.GetString());
 
-		internal Enum? Deserialize(string? value, Type enumerationType)
+		internal TEnum? Deserialize(string? value)
 		{
 			value = CleanEnumValue(value);
-			var isNullable = enumerationType.IsGenericType && enumerationType.GetGenericTypeDefinition() == typeof(Nullable<>);
 			if (String.IsNullOrWhiteSpace(value))
 			{
-				if (isNullable) return null;
+				if (_isNullable) return default;
 				else
 				{
-					var defaultEnumerationValue = GetDefaultValue(enumerationType);
-					if (defaultEnumerationValue is null) throw new JsonException($"Cannot convert the value '{value}' into a {enumerationType.Name}.");
-					return defaultEnumerationValue as Enum;
+					//var defaultEnumerationValue = GetDefaultValue(enumerationType);
+					var defaultEnumerationValue = _defaultValue;
+					if (defaultEnumerationValue is null) throw new JsonException($"Cannot convert the value '{value}' into a {_enumType.Name}.");
+					return (TEnum?) defaultEnumerationValue;
 				}
 			}
-
-			// If the target type is nullable, but the value is not null, than change the nullable for the underlying enumeration type.
-			if (isNullable) enumerationType = enumerationType.GenericTypeArguments.First();
-
+			
 #if NET5_0_OR_GREATER
-			if (Enum.TryParse(enumerationType, value, true, out var enumeration))
+			if (Enum.TryParse(_enumType, value, true, out var enumeration))
 			{
 #else
-			if (TryParseEnum(value!, enumerationType, out var enumeration))
+			if (TryParseEnum(value!, _enumType, out var enumeration))
 			{
 #endif
-
-				return enumeration as Enum;
+				return (TEnum?) enumeration;
 			}
 			else
 			{
-				throw new JsonException($"Cannot convert the value '{value}' into {enumerationType.Name}.");
+				throw new JsonException($"Cannot convert the value '{value}' into {_enumType.Name}.");
 			}
 		}
 		
@@ -177,31 +196,24 @@ public class EnumConverter : JsonConverterFactory
 		#region Serialization
 
 		/// <inheritdoc />
-		public override void Write(Utf8JsonWriter writer, Enum? enumeration, JsonSerializerOptions options)
+		public override void Write(Utf8JsonWriter writer, TEnum? enumeration, JsonSerializerOptions _)
 		{
-			if (enumeration is null) return;
-			writer.WriteStringValue(this.Serialize(enumeration));
-			if (_options.WriteOutOptions is ValueWriteOutAsComment commentOptions)
-			{
-				writer.WriteCommentValue(String.Join(commentOptions.Separator, GetEnumerationValues(enumeration.GetType())));
-			}
-			else if (_options.WriteOutOptions is ValueWriteOutAsProperty)
-			{
-				writer.WriteStartArray($"Values_for_{enumeration.GetType().Name}_{Random.Next(ushort.MinValue, ushort.MaxValue)}");
-				foreach (var enumerationValue in GetEnumerationValues(enumeration.GetType()))
-				{
-					writer.WriteStringValue(enumerationValue);
-				}
-				writer.WriteEndArray();
-			}
+			var enumString = this.Serialize(enumeration);
+			writer.WriteStringValue(enumString);
 		}
 
-		internal string? Serialize(Enum? enumeration)
+		internal string?  Serialize(TEnum? enumeration)
 		{
-			if (enumeration is null) return null;
-			var suffix = String.Empty;
-			if (_options.WriteOutOptions is ValueWriteOutAsSuffix suffixOptions) suffix = $" {suffixOptions.Start}{String.Join(suffixOptions.Separator, GetEnumerationValues(enumeration.GetType()))}{suffixOptions.End}";
-			return $"{enumeration}{suffix}";
+			var enumString = enumeration?.ToString(); 
+			var enumValues = GetEnumerationValues(_enumType, _isNullable);
+
+			if (_options.WriteOutOptions is ValueWriteOutAsSuffix suffixOptions)
+			{
+				var suffix = $" {suffixOptions.Start}{String.Join(suffixOptions.Separator, enumValues)}{suffixOptions.End}";
+				return $"{enumString ?? "null"}{suffix}";
+			}
+			
+			return enumString;
 		}
 
 		#endregion
@@ -224,35 +236,28 @@ public class EnumConverter : JsonConverterFactory
 		}
 #endif
 
-		private static IReadOnlyCollection<string> GetEnumerationValues(Type enumerationType)
+		private static IEnumerable<string> GetEnumerationValues(Type enumerationType, bool isNullable)
 		{
+			if (isNullable) yield return "null";
 			var enumValues = enumerationType.GetEnumValues();
-			var stringValues = new List<string>(enumValues.Length);
 			foreach (var enumValue in enumValues)
 			{
-				stringValues.Add(enumValue.ToString()!);
+				yield return enumValue.ToString()!;
 			}
-			return stringValues.ToArray();
 		}
 
 		private static string? CleanEnumValue(string? value)
 		{
 			if (value == null) return null;
-
-			// Since whitespaces are not allowed withing identifiers, this can be used to remove value write-out as suffix.
-			//! Flags enumerations are serialized as a comma separated list containing whitespaces. Therefore a RegEx approach has been chosen.
-			//			var separatorPosition = value.IndexOf(" ", StringComparison.OrdinalIgnoreCase);
-			//			if (separatorPosition < 0) return value;
-			//#if NET5_0_OR_GREATER
-			//			return value[..separatorPosition];
-			//#else
-			//			return value.Substring(0, separatorPosition);
-			//#endif
-			return ValueCleanRegEx.Replace(value, String.Empty);
+			var cleanedValue = InternalEnumConverterHelper.ValueCleanRegEx.Replace(value, String.Empty);
+			return cleanedValue == "null" ? null : cleanedValue; // This is necessary because the WriteOutOption 'AsSuffix' needs to wrap null values inside a string.
 		}
 
-		internal static object? GetDefaultValue(Type enumerationType)
+		internal static object? GetDefaultValue(/*Type enumerationType*/)
 		{
+			if (Nullable.GetUnderlyingType(typeof(TEnum)) is not null) return null;
+			var enumerationType = typeof(TEnum);
+
 			// Check for default attribute and return its value if available.
 			var attribute = enumerationType.GetCustomAttribute<System.ComponentModel.DefaultValueAttribute>(inherit: false);
 			if (attribute?.Value != null) return attribute.Value;
@@ -277,6 +282,8 @@ public class EnumConverter : JsonConverterFactory
 			var values = enumerationType.GetEnumValues();
 			return values.GetValue(0);
 		}
+
+		#endregion
 
 		#endregion
 	}

@@ -27,6 +27,15 @@ public class SettingsLoadException : SettingsException
 }
 
 /// <summary>
+/// Special <see cref="SettingsLoadException"/> used if no settings data could be loaded and creation of default data is explicitly disabled when loading settings.
+/// </summary>
+public class SettingsUnavailableException : SettingsLoadException
+{
+	/// <inheritdoc />
+	public SettingsUnavailableException() { }
+}
+
+/// <summary>
 /// Base exception used when saving settings fails (e.g. <see cref="ISettingsManager.Save{TSettings}"/>).
 /// </summary>
 public class SettingsSaveException : SettingsException

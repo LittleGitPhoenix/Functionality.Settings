@@ -67,7 +67,6 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 		if
 		(
 			!ContainsConverter<EnumConverter>(customJsonConverters)
-			&& !ContainsConverter<EnumConverter.InternalEnumConverter>(customJsonConverters)
 			&& !ContainsConverter<System.Text.Json.Serialization.JsonStringEnumConverter>(customJsonConverters)
 		)
 			this.AddDefaultJsonConverter();

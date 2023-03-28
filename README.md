@@ -175,6 +175,8 @@ var settingsManager = SettingsManager<string>
 		.WithIpAddressConverter()
 		.WithRegexConverter()
 		.WithTimeSpanConverter()
+		.WithVersionConverter()
+		.WithEnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"))
 		.WithDefaultSerializerOptions()
 	// <--
 	.AddCache(...)
@@ -241,55 +243,6 @@ class MySettings : ISettings
   	"second": "Entry2 [Default;Entry1;Entry2]"
   }
   ```
-
-- Write-out as comment
-
-  Will add the enumeration values with configurable separator as a single comment below the serialized property. Due to limitations of the **JsonStringEnumConverter** the comment cannot be added above the property.
-
-  ```c#
-  var converter = new EnumConverter(WriteOutValues.AsComment(separator: ";"));
-  var serializer = new JsonSettingsSerializer(converter);
-  var settingsData = serializer.Serialize(settings);
-  ```
-
-  ```json
-  {
-  	"first": "Entry1"
-  	/*Default;Entry1;Entry2*/,
-  	"second": "Entry2"
-  	/*Default;Entry1;Entry2*/
-  }
-  ```
-
-- Write out as separate property
-
-	Will add the enumeration values as an additional property below the serialized property. Due to limitations of the **JsonStringEnumConverter** the name of the additional property cannot correspond to the name of the serialized property and is a generic one based on the enumerations type appended by a random number to keep the JSON valid.
-
-	```c#
-	var converter = new EnumConverter(WriteOutValues.AsProperty());
-	var serializer = new JsonSettingsSerializer(converter);
-	var settingsData = serializer.Serialize(settings);
-	```
-
-	```json
-	{
-		"first": "Entry1",
-		"Values_for_MyEnum_45319": [
-			"Default",
-			"Entry1",
-			"Entry2"
-		],
-		"second": "Entry2",
-		"Values_for_MyEnum_13705": [
-			"Default",
-			"Entry1",
-			"Entry2"
-		]
-	}
-	```
-	
-	
-
 ___
 
 # Implementations of `ISettingsCache`

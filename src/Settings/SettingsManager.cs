@@ -85,7 +85,7 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 			if (settingsData is null)
 			{
 				// Create a new settings instance if possible.
-				settings = preventCreation ? throw new SettingsLoadException() : this.GetAndSaveDefaultInstance<TSettings>(preventUpdate);
+				settings = preventCreation ? throw new SettingsUnavailableException() : this.GetAndSaveDefaultInstance<TSettings>(preventUpdate);
 
 				// Setup usage of the special extension methods.
 				settings.InitializeExtensionMethods(this);
