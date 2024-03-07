@@ -30,7 +30,7 @@ public interface ISettingsManager
 	/// <summary>
 	/// Loads the settings of type <typeparamref name="TSettings"/>.
 	/// </summary>
-	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
+	/// <typeparam name="TSettings"> The specific settings type. </typeparam>
 	/// <param name="bypassCache"> Prevents the <see cref="ISettingsManager"/> from using its internal <see cref="ISettingsCache"/> when loading settings. Default is false. </param>
 	/// <param name="preventCreation"> Prevents the <see cref="ISettingsManager"/> from creating and saving a default instance of <typeparamref name="TSettings"/> if no underlying settings data is available. Default is false. </param>
 	/// <param name="preventUpdate"> Prevents the <see cref="ISettingsManager"/> from updating the underlying data source in case the settings instance differs from it. Default is false. </param>
@@ -44,7 +44,7 @@ public interface ISettingsManager
 	/// </summary>
 	/// <param name="settings"> The settings instance to save. </param>
 	/// <param name="createBackup"> Should a backup of the settings be made before the settings are saved. </param>
-	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
+	/// <typeparam name="TSettings"> The specific settings type. </typeparam>
 	/// <exception cref="SettingsSaveException"> May be thrown if the settings data could not be saved. </exception>
 	void Save<TSettings>(TSettings settings, bool createBackup = default) where TSettings : ISettings;
 
@@ -52,7 +52,7 @@ public interface ISettingsManager
 	/// Deletes the settings.
 	/// </summary>
 	/// <param name="createBackup"> Should a backup of the settings be made before the get deleted. </param>
-	/// <typeparam name="TSettings"> The concrete settings type. </typeparam>
+	/// <typeparam name="TSettings"> The specific settings type. </typeparam>
 	/// <exception cref="SettingsDeleteException"> May be thrown if the settings data could not be saved. </exception>
 	void Delete<TSettings>(bool createBackup = default) where TSettings : ISettings;
 

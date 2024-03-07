@@ -5,7 +5,7 @@ using Phoenix.Functionality.Settings;
 
 namespace Settings.Test;
 
-public class SettingsSinkExtensionsTest
+public class SettingsTest
 {
 	#region Setup
 
@@ -50,10 +50,10 @@ public class SettingsSinkExtensionsTest
 	{
 		// Arrange
 		var targetName = $"{typeof(UnnamedSettings).Namespace}.{nameof(UnnamedSettings)}";
-		var sink = _fixture.Create<ISettingsSink>();
+		var settings = new UnnamedSettings();
 
 		// Act
-		var settingsFileName = sink.GetSettingsName<UnnamedSettings>();
+		var settingsFileName = settings.GetSettingsName();
 
 		// Assert
 		Assert.That(targetName, Is.EqualTo(settingsFileName));
@@ -64,10 +64,10 @@ public class SettingsSinkExtensionsTest
 	{
 		// Arrange
 		var targetName = CustomSettingsName;
-		var sink = _fixture.Create<ISettingsSink>();
+		var settings = new NamedSettings();
 
 		// Act
-		var settingsFileName = sink.GetSettingsName<NamedSettings>();
+		var settingsFileName = settings.GetSettingsName();
 
 		// Assert
 		Assert.That(targetName, Is.EqualTo(settingsFileName));

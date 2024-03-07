@@ -5,9 +5,10 @@
 namespace Phoenix.Functionality.Settings;
 
 /// <summary>
-/// Defines a custom name for a <see cref="ISettings"/> class.
+/// <para> If used on <b>classes</b>: Defines a custom name for an <see cref="ISettings"/> class. </para>
+/// <para> If used on <b>properties</b>: Defines a custom name for the property (that could be displayed by a property grid). </para>
 /// </summary>
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 public class SettingsNameAttribute : Attribute
 {
 	/// <summary>
@@ -18,7 +19,7 @@ public class SettingsNameAttribute : Attribute
 	/// <summary>
 	/// Constructor
 	/// </summary>
-	/// <param name="name"> The custom name for the settings class. </param>
+	/// <param name="name"> <inheritdoc cref="Name"/> </param>
 	public SettingsNameAttribute(string name)
 	{
 		this.Name = name;

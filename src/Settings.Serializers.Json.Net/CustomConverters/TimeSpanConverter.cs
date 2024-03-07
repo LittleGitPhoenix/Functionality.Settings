@@ -17,22 +17,32 @@ public class TimeSpanConverter : JsonConverter<TimeSpan>
 	/// <inheritdoc />
 	public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		if (reader.TryGetInt64(out var numeric) && this.TryDeserialize(numeric, out var timeSpan)) return timeSpan;
+		try
+		{
+			if (reader.TryGetInt64(out var numeric) && this.TryDeserialize(numeric, out var timeSpan)) return timeSpan;
+		}
+		// Thrown if the value is not numeric.
+		//* Directly obtaining the value as string would fail if it is a pure number, so those differences must be handled with a try...catch.
+		catch (InvalidOperationException ex)
+		{
+			var value = reader.GetString();
+			if (this.TryDeserialize(value, out var timeSpan)) return timeSpan;
+		}
+		
 		throw new JsonException($"Cannot convert the value '{reader.GetString()}' of type {reader.TokenType} into a {nameof(TimeSpan)}.");
 	}
-
-	internal bool TryDeserialize(string value, out TimeSpan timeSpan)
-	{
-		if (long.TryParse(value, out var numeric)) return this.TryDeserialize(numeric, out timeSpan);
-
-		timeSpan = default;
-		return false;
-	}
-
+	
 	internal bool TryDeserialize(long numeric, out TimeSpan timeSpan)
 	{
 		timeSpan = TimeSpan.FromMilliseconds(numeric);
 		return true;
+	}
+
+	internal bool TryDeserialize(string value, out TimeSpan timeSpan, bool couldBeNumeric = false)
+	{
+		if (couldBeNumeric && long.TryParse(value, out var numeric)) return this.TryDeserialize(numeric, out timeSpan); // This shouldn't be necessary because the numeric check was already done in the 'Read' method, but for unit testing this is helpful.
+		if (TimeSpan.TryParse(value, out timeSpan)) return true;
+		return false;
 	}
 
 	#endregion

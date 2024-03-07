@@ -165,7 +165,7 @@ public class EncryptSettingsManagerTest
 		var isNested = EncryptSettingsManager.IsNested(nestedType);
 
 		// Assert
-		Assert.AreEqual(isNested, shouldBeTreatedAsCollection);
+		Assert.That(isNested, Is.EqualTo(shouldBeTreatedAsCollection));
 	}
 
 	[Test]
@@ -179,7 +179,7 @@ public class EncryptSettingsManagerTest
 		var isCollection = EncryptSettingsManager.IsCollection(collectionType);
 
 		// Assert
-		Assert.AreEqual(isCollection, shouldBeTreatedAsCollection);
+		Assert.That(isCollection, Is.EqualTo(shouldBeTreatedAsCollection));
 	}
 
 	[Test]
@@ -193,7 +193,7 @@ public class EncryptSettingsManagerTest
 		//var properties = EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray();
 
 		//// Assert
-		//Assert.IsEmpty(properties);
+		//Assert.That(properties, Is.Empty);
 	}
 
 	[Test]
@@ -206,7 +206,7 @@ public class EncryptSettingsManagerTest
 		var properties = EncryptSettingsManager.GetRelevantProperties(settings, System.Console.WriteLine).ToArray();
 
 		// Assert
-		Assert.IsEmpty(properties);
+		Assert.That(properties, Is.Empty);
 	}
 
 	[Test]
@@ -221,7 +221,7 @@ public class EncryptSettingsManagerTest
 
 		//// Assert
 		//Assert.That(properties, Has.Length.EqualTo(1));
-		//Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(System.Test.NestedClassFromSystemNamespace.Message)).Name); // '.Name' → Access some property, because the value tuple itself will always be available.
+		//Assert.That(properties.FirstOrDefault(info => info.Name == nameof(System.Test.NestedClassFromSystemNamespace.Message)).Name, Is.Not.Null); // '.Name' → Access some property, because the value tuple itself will always be available.
 	}
 
 	[Test]
@@ -235,13 +235,13 @@ public class EncryptSettingsManagerTest
 
 		// Assert
 		Assert.That(properties, Has.Length.GreaterThanOrEqualTo(1));
-		Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.PublicProperty)).Name); // '.Name' → Access some property, because the value tuple itself will always be available.
-		Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.ObjectProperty)).Name);
-		Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == "PrivateProperty").Name);
-		Assert.IsNotNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.InternalProperty)).Name);
-		Assert.IsNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.InvalidProperty)).Name);
-		Assert.IsNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.IrrelevantProperty)).Name);
-		Assert.IsNull(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.UnattributedString)).Name);
+		Assert.That(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.PublicProperty)).Name, Is.Not.Null); // '.Name' → Access some property, because the value tuple itself will always be available.
+		Assert.That(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.ObjectProperty)).Name, Is.Not.Null);
+		Assert.That(properties.FirstOrDefault(info => info.Name == "PrivateProperty").Name, Is.Not.Null);
+		Assert.That(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.InternalProperty)).Name, Is.Not.Null);
+		Assert.That(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.InvalidProperty)).Name, Is.Null);
+		Assert.That(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.IrrelevantProperty)).Name, Is.Null);
+		Assert.That(properties.FirstOrDefault(info => info.Name == nameof(MultiplePropertiesSettings.UnattributedString)).Name, Is.Null);
 	}
 
 	[Test]
@@ -255,7 +255,7 @@ public class EncryptSettingsManagerTest
 
 		// Assert
 		Assert.That(properties, Has.Length.EqualTo(3));
-		Assert.IsNotNull(properties.All(info => info.Name == nameof(NestedSettings.InnerInstance.Message)));
+		Assert.That(properties.All(info => info.Name == nameof(NestedSettings.InnerInstance.Message)), Is.Not.Null);
 	}
 
 	[Test]
@@ -343,7 +343,7 @@ public class EncryptSettingsManagerTest
 		var settings = settingsManager.Load<StringSettings>();
 
 		// Assert
-		Assert.IsNull(settings.Message);
+		Assert.That(settings.Message, Is.Null);
 	}
 
 	[Test]
@@ -372,7 +372,7 @@ public class EncryptSettingsManagerTest
 
 		// Assert
 		Mock.Get(underlyingSettingsManager).Verify(mock => mock.Save(settings, It.IsAny<bool>()), Times.Once());
-		Assert.IsNull(encryptedText);
+		Assert.That(encryptedText, Is.Null);
 	}
 
 	[Test]
@@ -405,7 +405,7 @@ public class EncryptSettingsManagerTest
 		(
 			() =>
 			{
-				Assert.IsNotNull(encrypted);
+				Assert.That(encrypted, Is.Not.Null);
 				Assert.That(encrypted, Is.Not.EqualTo(unencrypted));
 			}
 		);
@@ -546,7 +546,7 @@ public class EncryptSettingsManagerTest
 		var needsEncryption = settingsManager.DecryptProperties(settings);
 
 		// Assert
-		Assert.True(needsEncryption);
+		Assert.That(needsEncryption, Is.True);
 	}
 
 	[Test]
@@ -562,7 +562,7 @@ public class EncryptSettingsManagerTest
 		var needsEncryption = settingsManager.DecryptProperties(settings);
 
 		// Assert
-		Assert.False(needsEncryption);
+		Assert.That(needsEncryption, Is.False);
 	}
 
 	#endregion

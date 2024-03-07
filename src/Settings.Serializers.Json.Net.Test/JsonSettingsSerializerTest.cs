@@ -84,7 +84,7 @@ public class JsonSettingsSerializerTest
 		var jsonData = serializer.Serialize(settings);
 
 		// Assert
-		Assert.True(String.Equals(jsonData, targetData, StringComparison.OrdinalIgnoreCase));
+		Assert.That(String.Equals(jsonData, targetData, StringComparison.OrdinalIgnoreCase), Is.True);
 	}
 
 	[Test]
@@ -110,7 +110,7 @@ public class JsonSettingsSerializerTest
 		var settings = serializer.Deserialize<Settings>(jsonData, out _);
 
 		// Assert
-		Assert.AreEqual(message, settings?.Message);
+		Assert.That(message, Is.EqualTo(settings.Message));
 	}
 
 	[Test]
@@ -171,7 +171,7 @@ public class JsonSettingsSerializerTest
 		var areIdentical = serializer.AreIdentical(settings, settingsData);
 
 		// Assert
-		Assert.True(areIdentical);
+		Assert.That(areIdentical, Is.True);
 	}
 
 	/// <summary> Checks if an <see cref="ISettings"/> instance is not identical to its data representation. </summary>
@@ -188,7 +188,7 @@ public class JsonSettingsSerializerTest
 		var areIdentical = serializer.AreIdentical(settings, settingsData);
 
 		// Assert
-		Assert.False(areIdentical);
+		Assert.That(areIdentical, Is.False);
 	}
 
 	/// <summary>
@@ -244,8 +244,8 @@ public class JsonSettingsSerializerTest
 		(
 			() =>
 			{
-				Assert.True(JsonSettingsSerializer.TryAddCustomConverter(converter01, converters));
-				Assert.False(JsonSettingsSerializer.TryAddCustomConverter(converter02, converters));
+				Assert.That(JsonSettingsSerializer.TryAddCustomConverter(converter01, converters), Is.True);
+				Assert.That(JsonSettingsSerializer.TryAddCustomConverter(converter02, converters), Is.False);
 				Assert.That(converters, Has.Count.EqualTo(1));
 			}
 		);
@@ -264,7 +264,7 @@ public class JsonSettingsSerializerTest
 		serializer.Deserialize<ChangeSettings>(settingsData, out var rawData);
 
 		// Assert
-		Assert.NotNull(rawData);
+		Assert.That(rawData, Is.Not.Null);
 		Assert.That(((IDictionary<string, object>) rawData!)[nameof(ChangeSettings.Message)].ToString(), Is.EqualTo(message));
 		Assert.That(((dynamic) rawData).Superfluous.ToString(), Is.EqualTo("Irrelevant"));
 	}

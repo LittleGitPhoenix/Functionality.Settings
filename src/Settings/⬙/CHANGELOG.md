@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ___
 
+## 3.3.0
+
+:calendar: _2024-03-07_
+
+| .NET | .NET Standard | .NET Framework |
+| :-: | :-: | :-: |
+| :heavy_minus_sign: ~~5.0~~ :heavy_check_mark: 6.0 :new: 8.0 | :heavy_check_mark: 2.0 | :heavy_minus_sign: |
+
+### Added
+
+- The new `ISettingsLoadedNotification` interface can by implemented by settings classes so they get notified when the settings instance is actually loaded.
+
+- The new extension method `ISettings.GetSettingsName` allows to easily obtain the name of the settings class respecting the `SettingsNameAttribute`.
+
+- The following attributes have been added:
+
+	- `SettingsHideAttribute`
+
+		Used to attribute properties of an `ISettings` class that should be hidden from e.g. a property grid.
+
+	- `SettingsExpandAttribute`
+
+		Used to attribute properties of an `ISettings` class that should be treaded as nested in e.g. a property grid.
+
+### Changed
+
+- The `SettingsNameAttribute` can now be used on properties of an `ISettings` class so a property grid could display a different name.
+
+___
+
 ## 3.2.0
 
 :calendar: _2023-03-28_
@@ -12,7 +42,6 @@ ___
 ### Changed
 
 - When loading `ISettings` with the `ISettingsManager.Load` function having the `preventCreation` parameter set to **true**, the new `SettingsUnavailableException` may be thrown if no settings data is available. This can be used for settings migrations. The new exception `SettingsUnavailableException` inherits from `SettingsLoadException` and therefore does not break existing implementations.
-
 ___
 
 ## 3.1.0
@@ -57,9 +86,9 @@ ___
 
 :calendar: _2022-01-15_
 
-### Added
-
-- The project now natively supports **.NET 6**.
+| .NET | .NET Standard| .NET Framework |
+| :-: | :-: | :-: |
+| :heavy_check_mark: 5.0 :new: 6.0 | :heavy_check_mark: 2.0 |:heavy_minus_sign: |
 
 ### Changed
 

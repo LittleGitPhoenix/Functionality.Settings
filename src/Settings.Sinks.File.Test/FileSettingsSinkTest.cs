@@ -67,7 +67,7 @@ public class FileSettingsSinkTest
 		var settingsData = sink.Retrieve<Settings>();
 
 		// Assert
-		Assert.Null(settingsData);
+		Assert.That(settingsData, Is.Null);
 	}
 	
 	[Test]
@@ -123,7 +123,7 @@ public class FileSettingsSinkTest
 
 		// Assert
 		var settingsFile = testDirectory.Directory.EnumerateFileSystemInfos().Single();
-		Assert.NotNull(settingsFile);
+		Assert.That(settingsFile, Is.Not.Null);
 		mockSink.Verify(mock => mock.CreateBackup(It.IsAny<FileInfo>()), Times.Never());
 		mockSink.Verify(mock => mock.DeleteExistingSettingsFile(It.IsAny<FileInfo>()), Times.Never());
 	}
@@ -164,10 +164,10 @@ public class FileSettingsSinkTest
 		backupDirectory.Refresh();
 
 		// Assert
-		Assert.True(backupDirectory.Exists);
+		Assert.That(backupDirectory.Exists, Is.True);
 		var backupFile = backupDirectory.EnumerateFiles().Single();
 		var backupContent = System.IO.File.ReadAllBytes(backupFile.FullName);
-		Assert.AreEqual(content, backupContent);
+		Assert.That(content, Is.EqualTo(backupContent));
 	}
 
 	/// <summary> Checks that if the settings data is empty, the underlying file would be deleted. This just checks if the <see cref="FileSettingsSink.DeleteExistingSettingsFile"/> method is invoked. </summary>
@@ -202,12 +202,12 @@ public class FileSettingsSinkTest
 		var sink = new FileSettingsSink(testDirectory);
 
 		// Act
-		Assert.True(settingsFile.Exists);
+		Assert.That(settingsFile.Exists, Is.True);
 		sink.DeleteExistingSettingsFile(settingsFile);
 		settingsFile.Refresh();
 
 		// Assert
-		Assert.False(settingsFile.Exists);
+		Assert.That(settingsFile.Exists, Is.False);
 	}
 
 	[Test]

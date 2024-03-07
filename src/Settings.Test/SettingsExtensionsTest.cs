@@ -60,8 +60,9 @@ public class SettingsExtensionsTest
 		public TSettings Load<TSettings>(bool bypassCache = false, bool preventCreation = false, bool preventUpdate = false)
 			where TSettings : class, ISettings, new()
 		{
-			if (typeof(TSettings) != _settingsType)
-				throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+#pragma warning disable CS0618 // Type or member is obsolete
+			if (typeof(TSettings) != _settingsType) throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+#pragma warning restore CS0618 // Type or member is obsolete
 			return default;
 		}
 
@@ -69,16 +70,18 @@ public class SettingsExtensionsTest
 		public void Save<TSettings>(TSettings settings, bool createBackup = default)
 			where TSettings : ISettings
 		{
-			if (typeof(TSettings) != _settingsType)
-				throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+#pragma warning disable CS0618 // Type or member is obsolete
+			if (typeof(TSettings) != _settingsType) throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 
 		/// <inheritdoc />
 		public void Delete<TSettings>(bool createBackup = default)
 			where TSettings : ISettings
 		{
-			if (typeof(TSettings) != _settingsType)
-				throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+#pragma warning disable CS0618 // Type or member is obsolete
+			if (typeof(TSettings) != _settingsType) throw new SettingsTypeMismatchException(_settingsType, typeof(TSettings));
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 
 		#endregion
@@ -91,7 +94,7 @@ public class SettingsExtensionsTest
 	#region Reload
 
 	[Test]
-	public void Invoking_Reload_With_Different_Types_Throws()
+	public void InvokingReloadWithDifferentTypesThrows()
 	{
 		//var settings = new Settings();
 		//Assert.Throws<SettingsTypeMismatchException>(() => settings.Reload<OtherSettings>());
@@ -99,7 +102,7 @@ public class SettingsExtensionsTest
 	}
 
 	[Test]
-	public void Invoking_Reload_Without_Initialization_Throws()
+	public void InvokingReloadWithoutInitializationThrows()
 	{
 		var settings = new Settings();
 		Assert.Throws<MissingSettingsManagerException>(() => settings.Reload<Settings>());
@@ -131,7 +134,7 @@ public class SettingsExtensionsTest
 	#region Save
 
 	[Test]
-	public void Invoking_Save_Without_Initialization_Throws()
+	public void InvokingSaveWithoutInitializationThrows()
 	{
 		var settingsMock = new Mock<ISettings>();
 		var settings = settingsMock.Object;
@@ -139,7 +142,7 @@ public class SettingsExtensionsTest
 	}
 
 	[Test]
-	public void Invoking_Save_Succeeds()
+	public void InvokingSaveSucceeds()
 	{
 		var settingsManagerMock = new Mock<ISettingsManager>();
 		settingsManagerMock
@@ -163,9 +166,9 @@ public class SettingsExtensionsTest
 	/// <summary>
 	/// This test checks, that using the extension method <see cref="SettingsExtensions.Save{TSettings}"/> passes the specific generic type parameter of the settings instance to the <see cref="ISettingsManager.Save{TSettings}"/> method.
 	/// </summary>
-	/// <remarks> If the extension method uses <see cref="ISettings"/> as generic type, than <see cref="SettingsSinkExtensions.GetSettingsName{TSettings}"/> would not be able to get the real name of the settings instance. </remarks>
+	/// <remarks> If the extension method uses <see cref="ISettings"/> as generic type, then <see cref="SettingsSinkExtensions.GetSettingsName{TSettings}"/> would not be able to get the real name of the settings instance. </remarks>
 	[Test]
-	public void Invoking_Save_Uses_Specific_Generic_Type()
+	public void InvokingSaveUsesSpecificGenericType()
 	{
 		// Arrange
 		var settingsManager = new TypeMatchSettingsManager();

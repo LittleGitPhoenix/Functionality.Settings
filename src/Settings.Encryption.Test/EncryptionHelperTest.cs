@@ -45,7 +45,7 @@ public class EncryptionHelperTest
 		var decrypted = _encryptionHelper.Decrypt(encrypted);
 
 		// Assert
-		Assert.AreEqual(unencrypted, decrypted);
+		Assert.That(unencrypted, Is.EqualTo(decrypted));
 	}
 
 	/// <summary>
@@ -62,7 +62,7 @@ public class EncryptionHelperTest
 		var encrypted2 = _encryptionHelper.Encrypt(unencrypted);
 
 		// Assert
-		Assert.AreNotEqual(encrypted1, encrypted2, "This check may fail, if the random position of the encryption marker is accidentally the same for both independent encryption attempts.");
+		Assert.That(encrypted1, Is.Not.EqualTo(encrypted2), "This check may fail, if the random position of the encryption marker is accidentally the same for both independent encryption attempts.");
 	}
 
 	[Test]
@@ -75,7 +75,7 @@ public class EncryptionHelperTest
 		var encrypted = _encryptionHelper.Encrypt(unencrypted);
 
 		// Assert
-		Assert.True(encrypted?.Contains(EncryptionHelper.Marker) ?? false);
+		Assert.That(encrypted?.Contains(EncryptionHelper.Marker) ?? false, Is.True);
 	}
 
 	[Test]
@@ -88,7 +88,7 @@ public class EncryptionHelperTest
 		var decrypted = _encryptionHelper.Decrypt(pseudoEncrypted);
 
 		// Assert
-		Assert.AreEqual(pseudoEncrypted, decrypted);
+		Assert.That(pseudoEncrypted, Is.EqualTo(decrypted));
 	}
 
 	[Test]
@@ -98,7 +98,7 @@ public class EncryptionHelperTest
 		var encrypted = _encryptionHelper.Encrypt(null);
 
 		// Assert
-		Assert.IsNull(encrypted);
+		Assert.That(encrypted, Is.Null);
 	}
 
 	[Test]
@@ -108,7 +108,7 @@ public class EncryptionHelperTest
 		var decrypted = _encryptionHelper.Decrypt(null);
 
 		// Assert
-		Assert.IsNull(decrypted);
+		Assert.That(decrypted, Is.Null);
 	}
 
 	/// <summary>

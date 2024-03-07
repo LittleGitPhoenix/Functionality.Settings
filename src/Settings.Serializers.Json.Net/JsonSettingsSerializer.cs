@@ -57,7 +57,8 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 			AllowTrailingCommas = true,
 			IgnoreReadOnlyProperties = false,
 			PropertyNameCaseInsensitive = true,
-			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+			PropertyNamingPolicy = null,
+			DictionaryKeyPolicy = null,
 			ReadCommentHandling = JsonCommentHandling.Skip,
 			WriteIndented = true,
 			Converters = { /* Dynamically added below. */ }
@@ -148,7 +149,7 @@ public class JsonSettingsSerializer : ISettingsSerializer<string>
 
 	internal virtual void AddDefaultJsonConverter()
 	{
-		var defaultJsonConverter = new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false);
+		var defaultJsonConverter = new System.Text.Json.Serialization.JsonStringEnumConverter(null, false);
 		TryAddCustomConverter(defaultJsonConverter, _jsonSerializerOptions.Converters);
 	}
 

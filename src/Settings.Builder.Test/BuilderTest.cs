@@ -38,7 +38,7 @@ public class BuilderTest
 	#region Tests
 
 	[Test]
-	public void Check_Build_With_File_Sink_And_Json_Serializer()
+	public void CheckBuildWithFileSinkAndJsonSerializer()
 	{
 		// Arrange
 		var fileExtension = ".json";
@@ -66,7 +66,7 @@ public class BuilderTest
 			;
 
 		// Assert
-		Assert.NotNull(settingsManager);
+		Assert.That(settingsManager, Is.Not.Null);
 	}
 
 	#endregion

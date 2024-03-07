@@ -36,7 +36,7 @@ public class IpAddressConverterTest
 	#region Deserialize
 
 	[Test]
-	public void Deserialize_IpAddress()
+	public void DeserializeIpAddress()
 	{
 		// Arrange
 		var host = "192.168.0.1";
@@ -46,11 +46,11 @@ public class IpAddressConverterTest
 		var ipAddress = converter.Deserialize(host);
 
 		// Assert
-		Assert.AreEqual(host, ipAddress.ToString());
+		Assert.That(host, Is.EqualTo(ipAddress.ToString()));
 	}
 
 	[Test]
-	public void Deserialize_IpAddress_From_Localhost()
+	public void DeserializeIpAddressFromLocalhost()
 	{
 		// Arrange
 		var host = "localhost";
@@ -60,11 +60,11 @@ public class IpAddressConverterTest
 		var ipAddress = converter.Deserialize(host);
 
 		// Assert
-		Assert.AreEqual(IPAddress.Loopback, ipAddress);
+		Assert.That(IPAddress.Loopback, Is.EqualTo(ipAddress));
 	}
 
 	[Test]
-	public void Deserialize_IpAddress_From_Loopback()
+	public void DeserializeIpAddressFromLoopback()
 	{
 		// Arrange
 		var host = nameof(IPAddress.Loopback);
@@ -74,11 +74,11 @@ public class IpAddressConverterTest
 		var ipAddress = converter.Deserialize(host);
 
 		// Assert
-		Assert.AreEqual(IPAddress.Loopback, ipAddress);
+		Assert.That(IPAddress.Loopback, Is.EqualTo(ipAddress));
 	}
 
 	[Test]
-	public void Deserialize_IpAddress_From_Loopbackv6()
+	public void DeserializeIpAddressFromLoopbackv6()
 	{
 		// Arrange
 		var host = nameof(IPAddress.IPv6Loopback);
@@ -88,11 +88,11 @@ public class IpAddressConverterTest
 		var ipAddress = converter.Deserialize(host);
 
 		// Assert
-		Assert.AreEqual(IPAddress.IPv6Loopback, ipAddress);
+		Assert.That(IPAddress.IPv6Loopback, Is.EqualTo(ipAddress));
 	}
 
 	[Test]
-	public void Deserialize_IpAddress_From_Broadcast()
+	public void DeserializeIpAddressFromBroadcast()
 	{
 		// Arrange
 		var host = nameof(IPAddress.Broadcast);
@@ -102,7 +102,7 @@ public class IpAddressConverterTest
 		var ipAddress = converter.Deserialize(host);
 
 		// Assert
-		Assert.AreEqual(IPAddress.Broadcast, ipAddress);
+		Assert.That(IPAddress.Broadcast, Is.EqualTo(ipAddress));
 	}
 
 	#endregion
@@ -110,7 +110,7 @@ public class IpAddressConverterTest
 	#region Serialize
 
 	[Test]
-	public void Serialize_IpAddress()
+	public void SerializeIpAddress()
 	{
 		// Arrange
 		var host = "192.168.0.1";
@@ -121,11 +121,11 @@ public class IpAddressConverterTest
 		var actualHost = converter.Serialize(ip);
 
 		// Assert
-		Assert.AreEqual(host, actualHost);
+		Assert.That(host, Is.EqualTo(actualHost));
 	}
 
 	[Test]
-	public void Serialize_IpAddress_To_Loopback()
+	public void SerializeIpAddressToLoopback()
 	{
 		// Arrange
 		var ip = IPAddress.Loopback;
@@ -135,11 +135,11 @@ public class IpAddressConverterTest
 		var actualHost = converter.Serialize(ip);
 
 		// Assert
-		Assert.AreEqual(nameof(IPAddress.Loopback), actualHost);
+		Assert.That(nameof(IPAddress.Loopback), Is.EqualTo(actualHost));
 	}
 
 	[Test]
-	public void Serialize_IpAddress_To_Loopbackv6()
+	public void SerializeIpAddressToLoopbackv6()
 	{
 		// Arrange
 		var ip = IPAddress.IPv6Loopback;
@@ -149,11 +149,11 @@ public class IpAddressConverterTest
 		var actualHost = converter.Serialize(ip);
 
 		// Assert
-		Assert.AreEqual(nameof(IPAddress.IPv6Loopback), actualHost);
+		Assert.That(nameof(IPAddress.IPv6Loopback), Is.EqualTo(actualHost));
 	}
 
 	[Test]
-	public void Serialize_IpAddress_To_Broadcast()
+	public void SerializeIpAddressToBroadcast()
 	{
 		// Arrange
 		var ip = IPAddress.Broadcast;
@@ -163,7 +163,7 @@ public class IpAddressConverterTest
 		var actualHost = converter.Serialize(ip);
 
 		// Assert
-		Assert.AreEqual(nameof(IPAddress.Broadcast), actualHost);
+		Assert.That(nameof(IPAddress.Broadcast), Is.EqualTo(actualHost));
 	}
 
 	#endregion

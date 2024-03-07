@@ -5,9 +5,9 @@
 namespace Phoenix.Functionality.Settings;
 
 /// <summary>
-/// The description for the <see cref="ISettings"/> class or property.
+/// The description for the <see cref="ISettings"/> property.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 public class SettingsDescriptionAttribute : Attribute
 {
 	/// <summary>
@@ -18,7 +18,7 @@ public class SettingsDescriptionAttribute : Attribute
 	/// <summary>
 	/// Constructor
 	/// </summary>
-	/// <param name="description"> The description for the settings class or property. </param>
+	/// <param name="description"> <inheritdoc cref="Description"/> </param>
 	public SettingsDescriptionAttribute(string description)
 	{
 		this.Description = description;

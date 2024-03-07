@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Phoenix.Functionality.Settings.Cache;
 
@@ -14,47 +15,57 @@ namespace Phoenix.Functionality.Settings;
 /// </summary>
 public static class SettingsExtensions
 {
-	#region Delegates / Events
-	#endregion
-
-	#region Constants
-	#endregion
-
 	#region Fields
 
 	/// <summary>
 	/// Cache of all <see cref="ISettingsManager"/> mapped to the concrete <see cref="ISettings"/> type that where loaded with it.
 	/// </summary>
-	internal static readonly ConcurrentDictionary<Type, ISettingsManager> Cache;
+	internal static readonly ConcurrentDictionary<Type, ISettingsManager> Cache = new();
 
 	#endregion
 
 	#region Properties
 	#endregion
 
-	#region (De)Constructors
+	#region Methods
 
-	static SettingsExtensions()
+	#region Name
+
+	/// <summary>
+	/// Gets the name of a <paramref name="settings"/> instance respecting the <see cref="SettingsNameAttribute"/>.
+	/// </summary>
+	/// <param name="settings"> The <see cref="ISettings"/> instance for which to obtain the name. </param>
+	/// <returns> The name of the settings class. </returns>
+	public static string GetSettingsName(this ISettings settings)
+		=> GetSettingsName(settings.GetType());
+	
+	/// <summary>
+	/// Gets the name of a settings class respecting the <see cref="SettingsNameAttribute"/>.
+	/// </summary>
+	/// <param name="settingsType"> The type of the settings class. </param>
+	/// <returns> The name of the settings class. </returns>
+	internal static string GetSettingsName(Type settingsType)
 	{
-		// Save parameters.
+		if (!typeof(ISettings).IsAssignableFrom(settingsType)) throw new ArgumentException($"The passed type '{settingsType}' must implement the interface '{nameof(ISettings)}'.");
 
-		// Initialize fields.
-		Cache = new ConcurrentDictionary<Type, ISettingsManager>();
+		// First check for the SettingsFileNameAttribute.
+		var settingsFileNameAttribute = settingsType.GetCustomAttribute<SettingsNameAttribute>();
+		return settingsFileNameAttribute?.Name ?? $"{settingsType.Namespace}.{settingsType.Name}";
 	}
 
 	#endregion
 
-	#region Methods
+	#region Reload, Save, Delete
 
 	/// <summary>
-	/// 
+	/// Initializes the usage of the <see cref="Reload{TSettings}"/>, <see cref="Save{TSettings}"/> and <see cref="Delete{TSettings}"/> extesnion methods by internally saving the <paramref name="settingsManager"/> used to originally obtain the <paramref name="settings"/>.
 	/// </summary>
 	/// <param name="settings"> The extended <see cref="ISettings"/> instance. </param>
 	/// <param name="settingsManager"> The <see cref="ISettingsManager"/> that was used to load the <paramref name="settings"/> and is needed for (most) of the extension methods for <see cref="ISettings"/> of this class. </param>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static void InitializeExtensionMethods(this ISettings settings, ISettingsManager settingsManager)
 	{
-		SettingsExtensions.Cache.AddOrUpdate(settings.GetType(), settingsManager, (_, _) => settingsManager);
+		Cache.AddOrUpdate(settings.GetType(), settingsManager, (_, _) => settingsManager);
 	}
 
 	/// <summary>
@@ -72,7 +83,7 @@ public static class SettingsExtensions
 	public static TSettings Reload<TSettings>(this TSettings settings, bool preventUpdate = false)
 		where TSettings : class, ISettings, new()
 	{
-		if (!SettingsExtensions.Cache.TryGetValue(typeof(TSettings), out var settingsManager))
+		if (!Cache.TryGetValue(typeof(TSettings), out var settingsManager))
 		{
 			throw new MissingSettingsManagerException(settings);
 		}
@@ -86,7 +97,7 @@ public static class SettingsExtensions
 	public static void Save<TSettings>(this TSettings settings, bool createBackup = default)
 		where TSettings : ISettings
 	{
-		if (!SettingsExtensions.Cache.TryGetValue(settings.GetType(), out var settingsManager))
+		if (!Cache.TryGetValue(settings.GetType(), out var settingsManager))
 		{
 			throw new MissingSettingsManagerException(settings);
 		}
@@ -100,13 +111,15 @@ public static class SettingsExtensions
 	public static void Delete<TSettings>(this TSettings settings, bool createBackup = default)
 		where TSettings : ISettings
 	{
-		if (!SettingsExtensions.Cache.TryGetValue(settings.GetType(), out var settingsManager))
+		if (!Cache.TryGetValue(settings.GetType(), out var settingsManager))
 		{
 			throw new MissingSettingsManagerException(settings);
 		}
 
 		settingsManager.Delete<TSettings>(createBackup);
 	}
+	
+	#endregion
 
 	#endregion
 }
@@ -126,7 +139,7 @@ public abstract class SettingsExtensionMethodException : Exception
 /// <summary>
 /// <para> Exception thrown when invoking either of the following extension methods without the <see cref="ISettings"/> instance used for those methods hasn't been loaded via an <see cref="ISettingsManager"/>. </para>
 /// <para> • <see cref="SettingsExtensions.Reload{TSettings}"/> </para>
-/// <para> • <see cref="SettingsExtensions.Save"/> </para>
+/// <para> • <see cref="SettingsExtensions.Save{TSettings}"/> </para>
 /// </summary>
 public sealed class MissingSettingsManagerException : SettingsExtensionMethodException
 {

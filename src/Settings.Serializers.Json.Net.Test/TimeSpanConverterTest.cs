@@ -33,22 +33,23 @@ public class TimeSpanConverterTest
 	#region Tests
 
 	[Test]
-	public void Deserialize_TimeSpan_From_Numeric()
+	public void DeserializeTimeSpanFromNumeric()
 	{
 		// Arrange
 		var converter = new TimeSpanConverter();
 		var targetMilliseconds = 5000;
+		var value = targetMilliseconds;
 
 		// Act
-		var success = converter.TryDeserialize(targetMilliseconds, out var timeSpan);
-			
+		var success = converter.TryDeserialize(value, out var timeSpan);
+
 		// Assert
-		Assert.True(success);
-		Assert.AreEqual(timeSpan.TotalMilliseconds, targetMilliseconds);
+		Assert.That(success, Is.True);
+		Assert.That(timeSpan.TotalMilliseconds, Is.EqualTo(targetMilliseconds));
 	}
 
 	[Test]
-	public void Deserialize_TimeSpan_From_String()
+	public void DeserializeTimeSpanFromNumericString()
 	{
 		// Arrange
 		var converter = new TimeSpanConverter();
@@ -56,15 +57,45 @@ public class TimeSpanConverterTest
 		var value = $"{targetMilliseconds}";
 
 		// Act
-		var success = converter.TryDeserialize(value, out var timeSpan);
-			
+		var success = converter.TryDeserialize(value, out var timeSpan, couldBeNumeric: true);
+
 		// Assert
-		Assert.True(success);
-		Assert.AreEqual(timeSpan.TotalMilliseconds, targetMilliseconds);
+		Assert.That(success, Is.True);
+		Assert.That(timeSpan.TotalMilliseconds, Is.EqualTo(targetMilliseconds));
 	}
 
 	[Test]
-	public void Serialize_TimeSpan_Into_Numeric()
+	public void DeserializeTimeSpanFromString()
+	{
+		// Arrange
+		var converter = new TimeSpanConverter();
+		var targetMilliseconds = 5000;
+		var value = "00:00:05";
+
+		// Act
+		var success = converter.TryDeserialize(value, out var timeSpan);
+			
+		// Assert
+		Assert.That(success, Is.True);
+		Assert.That(timeSpan.TotalMilliseconds, Is.EqualTo(targetMilliseconds));
+	}
+
+	[Test]
+	public void DeserializeTimeSpanFromNull()
+	{
+		// Arrange
+		var converter = new TimeSpanConverter();
+		string? value = null;
+
+		// Act
+		var success = converter.TryDeserialize(value, out var timeSpan);
+
+		// Assert
+		Assert.That(success, Is.False);
+	}
+
+	[Test]
+	public void SerializeTimeSpanIntoNumeric()
 	{
 		// Arrange
 		var converter = new TimeSpanConverter();
@@ -75,12 +106,12 @@ public class TimeSpanConverterTest
 		var success = converter.TrySerialize(timeSpan, out long numeric);
 
 		// Assert
-		Assert.True(success);
-		Assert.AreEqual(numeric, targetMilliseconds);
+		Assert.That(success, Is.True);
+		Assert.That(numeric, Is.EqualTo(targetMilliseconds));
 	}
 
 	[Test]
-	public void Serialize_TimeSpan_Into_String()
+	public void SerializeTimeSpanIntoString()
 	{
 		// Arrange
 		var converter = new TimeSpanConverter();
@@ -92,8 +123,8 @@ public class TimeSpanConverterTest
 		var success = converter.TrySerialize(timeSpan, out string value);
 
 		// Assert
-		Assert.True(success);
-		Assert.AreEqual(value, targetValue);
+		Assert.That(success, Is.True);
+		Assert.That(value, Is.EqualTo(targetValue));
 	}
 
 	#endregion

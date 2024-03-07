@@ -44,7 +44,7 @@ public class CacheTest
 	#region Load Settings
 
 	[Test]
-	public void Load_From_Strong_Cache()
+	public void LoadFromStrongCache()
 	{
 		var cache = new SettingsCache();
 
@@ -56,17 +56,17 @@ public class CacheTest
 		}
 
 		var wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsFalse(wasLoadedFromCache);
-		Assert.AreEqual(1, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.False);
+		Assert.That(1, Is.EqualTo(factoryExecutionCount));
 
 		this.OperateCache(cache, Factory);
 		wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsTrue(wasLoadedFromCache);
-		Assert.AreEqual(1, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.True);
+		Assert.That(1, Is.EqualTo(factoryExecutionCount));
 	}
 
 	[Test]
-	public async Task Load_From_Weak_Cache()
+	public async Task LoadFromWeakCache()
 	{
 		var cache = new WeakSettingsCache();
 
@@ -78,8 +78,8 @@ public class CacheTest
 		}
 
 		var wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsFalse(wasLoadedFromCache);
-		Assert.AreEqual(1, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.False);
+		Assert.That(1, Is.EqualTo(factoryExecutionCount));
 
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
@@ -88,17 +88,17 @@ public class CacheTest
 
 		// After the GC (hopefully) did its job, the stored reference to the settings should be gone. Therefore the settings instance shouldn't be from the cache.
 		wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsFalse(wasLoadedFromCache);
-		Assert.AreEqual(2, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.False);
+		Assert.That(2, Is.EqualTo(factoryExecutionCount));
 
 		// Without GC, the stored reference should still be alive and therefore the settings instance should be loaded from cache.
 		wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsTrue(wasLoadedFromCache);
-		Assert.AreEqual(2, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.True);
+		Assert.That(2, Is.EqualTo(factoryExecutionCount));
 	}
 
 	[Test]
-	public void Load_From_No_Cache()
+	public void LoadFromNoCache()
 	{
 		var cache = new NoSettingsCache();
 
@@ -111,30 +111,30 @@ public class CacheTest
 
 		// Load #1:
 		var wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsFalse(wasLoadedFromCache);
-		Assert.AreEqual(1, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.False);
+		Assert.That(1, Is.EqualTo(factoryExecutionCount));
 
 		// Load #2:
 		wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsFalse(wasLoadedFromCache);
-		Assert.AreEqual(2, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.False);
+		Assert.That(2, Is.EqualTo(factoryExecutionCount));
 
 		// Load #3:
 		wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsFalse(wasLoadedFromCache);
-		Assert.AreEqual(3, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.False);
+		Assert.That(3, Is.EqualTo(factoryExecutionCount));
 
 		// Load #4:
 		wasLoadedFromCache = this.OperateCache(cache, Factory);
-		Assert.IsFalse(wasLoadedFromCache);
-		Assert.AreEqual(4, factoryExecutionCount);
+		Assert.That(wasLoadedFromCache, Is.False);
+		Assert.That(4, Is.EqualTo(factoryExecutionCount));
 	}
 
 	[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
 	private bool OperateCache<TSettings>(ISettingsCache cache, Func<TSettings> factory) where TSettings : class, ISettings, new()
 	{
 		var wasLoadedFromCache = cache.TryGetOrAdd(out var settings, factory);
-		Assert.AreEqual(settings.GetType(), typeof(TSettings));
+		Assert.That(settings, Is.TypeOf<TSettings>());
 		return wasLoadedFromCache;
 	}
 
@@ -143,38 +143,38 @@ public class CacheTest
 	#region Load Different Settings
 
 	[Test]
-	public void Load_Different_Settings_From_Strong_Cache()
-		=> this.Load_Different_Settings(new SettingsCache());
+	public void LoadDifferentSettingsFromStrongCache()
+		=> this.LoadDifferentSettings(new SettingsCache());
 
 	[Test]
-	public void Load_Different_Settings_From_Weak_Cache()
-		=> this.Load_Different_Settings(new WeakSettingsCache());
+	public void LoadDifferentSettingsFromWeakCache()
+		=> this.LoadDifferentSettings(new WeakSettingsCache());
 		
 	[Test]
-	public void Load_Different_Settings_From_No_Cache()
-		=> this.Load_Different_Settings(new NoSettingsCache());
+	public void LoadDifferentSettingsFromNoCache()
+		=> this.LoadDifferentSettings(new NoSettingsCache());
 
-	private void Load_Different_Settings(ISettingsCache cache)
+	private void LoadDifferentSettings(ISettingsCache cache)
 	{
-		TestSettings Factory() => new TestSettings();
-		OtherTestSettings OtherFactory() => new OtherTestSettings();
-		DifferentTestSettings DifferentFactory() => new DifferentTestSettings();
+		TestSettings Factory() => new();
+		OtherTestSettings OtherFactory() => new();
+		DifferentTestSettings DifferentFactory() => new();
 
 		// Check different types after creation.
 		cache.TryGetOrAdd(out var settings, Factory);
 		cache.TryGetOrAdd(out var otherSettings, OtherFactory);
 		cache.TryGetOrAdd(out var differentSettings, DifferentFactory);
-		Assert.AreEqual(settings.GetType(), typeof(TestSettings));
-		Assert.AreEqual(otherSettings.GetType(), typeof(OtherTestSettings));
-		Assert.AreEqual(differentSettings.GetType(), typeof(DifferentTestSettings));
+		Assert.That(settings, Is.TypeOf<TestSettings>());
+		Assert.That(otherSettings, Is.TypeOf<OtherTestSettings>());
+		Assert.That(differentSettings, Is.TypeOf<DifferentTestSettings>());
 
 		// Check different types from cache.
 		cache.TryGetOrAdd(out settings, Factory);
 		cache.TryGetOrAdd(out otherSettings, OtherFactory);
 		cache.TryGetOrAdd(out differentSettings, DifferentFactory);
-		Assert.AreEqual(settings.GetType(), typeof(TestSettings));
-		Assert.AreEqual(otherSettings.GetType(), typeof(OtherTestSettings));
-		Assert.AreEqual(differentSettings.GetType(), typeof(DifferentTestSettings));
+		Assert.That(settings, Is.TypeOf<TestSettings>());
+		Assert.That(otherSettings, Is.TypeOf<OtherTestSettings>());
+		Assert.That(differentSettings, Is.TypeOf<DifferentTestSettings>());
 	}
 
 	#endregion
@@ -182,31 +182,31 @@ public class CacheTest
 	#region Get All Settings
 
 	[Test]
-	public void Check_Get_All_Settings_From_Strong_Cache()
+	public void CheckGetAllSettingsFromStrongCache()
 	{
-		var settings = this.Load_All_Settings(new SettingsCache());
-		Assert.AreEqual(3, settings.Count);
+		var settings = this.LoadAllSettings(new SettingsCache());
+		Assert.That(3, Is.EqualTo(settings.Count));
 	}
 
 	[Test]
-	public void Check_Get_All_Settings_From_Weak_Cache()
+	public void CheckGetAllSettingsFromWeakCache()
 	{
-		var settings = this.Load_All_Settings(new WeakSettingsCache());
-		Assert.AreEqual(3, settings.Count);
+		var settings = this.LoadAllSettings(new WeakSettingsCache());
+		Assert.That(3, Is.EqualTo(settings.Count));
 	}
 
 	[Test]
-	public void Check_Get_All_Settings_No_Cache()
+	public void CheckGetAllSettingsNoCache()
 	{
-		var settings = this.Load_All_Settings(new NoSettingsCache());
-		Assert.AreEqual(0, settings.Count);
+		var settings = this.LoadAllSettings(new NoSettingsCache());
+		Assert.That(0, Is.EqualTo(settings.Count));
 	}
 
-	private ICollection<ISettings> Load_All_Settings(ISettingsCache cache)
+	private ICollection<ISettings> LoadAllSettings(ISettingsCache cache)
 	{
-		TestSettings Factory() => new TestSettings();
-		OtherTestSettings OtherFactory() => new OtherTestSettings();
-		DifferentTestSettings DifferentFactory() => new DifferentTestSettings();
+		TestSettings Factory() => new();
+		OtherTestSettings OtherFactory() => new();
+		DifferentTestSettings DifferentFactory() => new();
 
 		// Check different types after creation.
 		cache.TryGetOrAdd(out var settings, Factory);
@@ -221,33 +221,33 @@ public class CacheTest
 	#region Delete Settings
 	
 	[Test]
-	public void Check_Delete_Settings_From_Strong_Cache()
+	public void CheckDeleteSettingsFromStrongCache()
 	{
 		var cache = new SettingsCache();
-		var wasRemoved = this.Delete_Settings(cache);
-		Assert.True(wasRemoved);
-		Assert.IsEmpty(cache.GetAllCachedSettings());
+		var wasRemoved = this.DeleteSettings(cache);
+		Assert.That(wasRemoved, Is.True);
+		Assert.That(cache.GetAllCachedSettings(), Is.Empty);
 	}
 	
 	[Test]
-	public void Check_Delete_Settings_From_Weak_Cache()
+	public void CheckDeleteSettingsFromWeakCache()
 	{
 		var cache = new WeakSettingsCache();
-		var wasRemoved = this.Delete_Settings(cache);
-		Assert.True(wasRemoved);
-		Assert.IsEmpty(cache.GetAllCachedSettings());
+		var wasRemoved = this.DeleteSettings(cache);
+		Assert.That(wasRemoved, Is.True);
+		Assert.That(cache.GetAllCachedSettings(), Is.Empty);
 	}
 	
 	[Test]
-	public void Check_Delete_Settings_From_No_Cache()
+	public void CheckDeleteSettingsFromNoCache()
 	{
 		var cache = new NoSettingsCache();
-		var wasRemoved = this.Delete_Settings(cache);
-		Assert.False(wasRemoved);
-		Assert.IsEmpty(cache.GetAllCachedSettings());
+		var wasRemoved = this.DeleteSettings(cache);
+		Assert.That(wasRemoved, Is.False);
+		Assert.That(cache.GetAllCachedSettings(), Is.Empty);
 	}
 
-	private bool Delete_Settings(ISettingsCache cache)
+	private bool DeleteSettings(ISettingsCache cache)
 	{
 		var settings = new TestSettings();
 		cache.AddOrUpdate(settings);

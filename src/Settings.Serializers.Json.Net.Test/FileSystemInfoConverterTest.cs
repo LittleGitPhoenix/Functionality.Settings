@@ -81,7 +81,7 @@ public class FileSystemInfoConverterTest
 
 		// Assert
 		// Checking the instances for equality fails for FileInfo. Instead check the full name.
-		Assert.AreEqual(deserializedSettings?.File.FullName, file.FullName);
+		Assert.That(deserializedSettings?.File.FullName, Is.EqualTo(file.FullName));
 	}
 		
 	[Test]
@@ -115,7 +115,7 @@ public class FileSystemInfoConverterTest
 		var deserializedSettings = JsonSerializer.Deserialize<DirectorySettings>(settingsString, jsonOptions);
 
 		// Assert
-		Assert.AreEqual(deserializedSettings?.Directory, directory);
+		Assert.That(deserializedSettings?.Directory, Is.EqualTo(directory));
 	}
 		
 	[Test]

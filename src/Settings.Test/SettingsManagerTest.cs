@@ -37,6 +37,17 @@ public class SettingsManagerTest
 	#region Data
 
 	public class Settings : ISettings { }
+	
+	public class LoadSettings : ISettings, ISettingsLoadedNotification
+	{
+		public bool Raised { get; private set; }
+
+		/// <inheritdoc />
+		public void Loaded()
+		{
+			this.Raised = true;
+		}
+	}
 
 	public class ChangeSettings : ISettings, ISettingsLayoutChangedNotification
 	{
@@ -56,7 +67,7 @@ public class SettingsManagerTest
 	#region Load
 
 	[Test]
-	public void Check_Load_Returns_From_Cache()
+	public void LoadReturnsFromCache()
 	{
 		// Arrange
 		var existingSettings = new Settings();
@@ -89,7 +100,7 @@ public class SettingsManagerTest
 		var settings = manager.Load<Settings>();
 
 		// Assert
-		Assert.NotNull(settings);
+		Assert.That(settings, Is.Not.Null);
 		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Never);
@@ -97,7 +108,7 @@ public class SettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Load_Saves_To_Cache()
+	public void LoadSavesToCache()
 	{
 		// Arrange
 		var cache = _fixture.Create<Mock<ISettingsCache>>().Object;
@@ -112,7 +123,7 @@ public class SettingsManagerTest
 		var settings = manager.Load<Settings>();
 
 		// Assert
-		Assert.NotNull(settings);
+		Assert.That(settings, Is.Not.Null);
 		Mock.Get(cache).Verify(mock => mock.AddOrUpdate(It.IsAny<Settings>()), Times.Once);
 	}
 
@@ -120,7 +131,7 @@ public class SettingsManagerTest
 	/// Checks that the <see cref="SettingsManager{TSettingsData}"/> creates a new settings instance if no data is available.
 	/// </summary>
 	[Test]
-	public void Check_Load_Creates_And_Saves_New_Instance()
+	public void LoadCreatesAndSavesNewInstance()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -150,7 +161,7 @@ public class SettingsManagerTest
 		var settings = manager.Load<Settings>(preventCreation: false);
 
 		// Assert
-		Assert.NotNull(settings);
+		Assert.That(settings, Is.Not.Null);
 		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Once);
@@ -161,7 +172,7 @@ public class SettingsManagerTest
 	/// Checks that the <see cref="SettingsManager{TSettingsData}"/> does not create a new settings instance if no data is available and rather throws an <see cref="SettingsLoadException"/>.
 	/// </summary>
 	[Test]
-	public void Check_Load_Does_Not_Create_And_Save_New_Instance()
+	public void LoadDoesNotCreateAndSaveNewInstance()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -197,7 +208,7 @@ public class SettingsManagerTest
 
 	[Test]
 	[Ignore("The manger no longer creates a default instance if deserialization fails. Instead it throws.")]
-	public void Check_Load_Creates_And_Saves_New_Instance_If_Deserialization_Fails()
+	public void LoadCreatesAndSavesNewInstanceIfDeserializationFails()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -235,7 +246,7 @@ public class SettingsManagerTest
 		var settings = manager.Load<Settings>();
 
 		// Assert
-		Assert.NotNull(settings);
+		Assert.That(settings, Is.Not.Null);
 		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Once);
@@ -243,7 +254,7 @@ public class SettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Load_Throws_If_Deserialization_Fails()
+	public void LoadThrowsIfDeserializationFails()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -284,7 +295,7 @@ public class SettingsManagerTest
 	/// Checks that loading unavailable settings with the <b>preventCreation</b> parameter set to <b>true</b> throws the <see cref="SettingsUnavailableException"/>.
 	/// </summary>
 	[Test]
-	public void Check_Load_Throws_If_Settings_Data_Is_Unavailable()
+	public void LoadThrowsIfSettingsDataIsUnavailable()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -303,7 +314,7 @@ public class SettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Load_Uses_Existing_Data()
+	public void LoadUsesExistingData()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -346,7 +357,7 @@ public class SettingsManagerTest
 		var settings = manager.Load<Settings>();
 
 		// Assert
-		Assert.NotNull(settings);
+		Assert.That(settings, Is.Not.Null);
 		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Never);
@@ -355,7 +366,7 @@ public class SettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Load_Uses_Existing_Data_And_ReSaves_Settings()
+	public void LoadUsesExistingDataAndReSavesSettings()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -398,7 +409,7 @@ public class SettingsManagerTest
 		var settings = manager.Load<Settings>();
 
 		// Assert
-		Assert.NotNull(settings);
+		Assert.That(settings, Is.Not.Null);
 		Mock.Get(sink).Verify(mock => mock.Retrieve<Settings>(), Times.Once);
 		Mock.Get(manager).Verify(mock => mock.GetAndSaveDefaultInstance<Settings>(It.IsAny<bool>()), Times.Never);
 		Mock.Get(manager).Verify(mock => mock.Save(It.IsAny<Settings>(), It.IsAny<bool>()), Times.Once);
@@ -407,7 +418,7 @@ public class SettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Load_Triggers_Layout_Change()
+	public void LoadTriggersLayoutChange()
 	{
 		// Arrange
 		var sinkMock = _fixture.Create<Mock<ISettingsSink<string>>>();
@@ -435,14 +446,80 @@ public class SettingsManagerTest
 		var settings = manager.Load<ChangeSettings>();
 
 		// Assert
-		Assert.True(settings.Raised);
+		Assert.That(settings.Raised, Is.True);
 		sinkMock.Verify(mock => mock.Retrieve<ChangeSettings>(), Times.Once);
 		serializerMock.Verify(mock => mock.Deserialize<ChangeSettings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
 	}
 
+	[Test]
+	public void LoadTriggersLoadEvent()
+	{
+		// Arrange
+		var sinkMock = _fixture.Create<Mock<ISettingsSink<string>>>();
+		sinkMock
+			.Setup(mock => mock.Retrieve<LoadSettings>())
+			.Returns(String.Empty)
+			.Verifiable()
+			;
+		var serializerMock = _fixture.Create<Mock<ISettingsSerializer<string>>>();
+		serializerMock
+			.Setup(mock => mock.Deserialize<LoadSettings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny))
+			.Returns
+			(
+				(string _, out ExpandoObject? rawData) =>
+				{
+					rawData = new ExpandoObject();
+					return new LoadSettings();
+				}
+			)
+			.Verifiable()
+			;
+		var manager = new SettingsManager<string>(sinkMock.Object, serializerMock.Object);
+
+		// Act
+		var settings = manager.Load<LoadSettings>();
+
+		// Assert
+		Assert.That(settings.Raised, Is.True);
+		sinkMock.Verify(mock => mock.Retrieve<LoadSettings>(), Times.Once);
+		serializerMock.Verify(mock => mock.Deserialize<LoadSettings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Once);
+	}
+
+	[Test]
+	public void CacheDoesNotTriggerLoadEvent()
+	{
+		// Arrange
+		var sinkMock = _fixture.Create<Mock<ISettingsSink<string>>>();
+		var serializerMock = _fixture.Create<Mock<ISettingsSerializer<string>>>();
+		var cacheMock = _fixture.Create<Mock<ISettingsCache>>();
+		cacheMock
+			.Setup(mock => mock.TryGet(out It.Ref<LoadSettings?>.IsAny))
+			.Returns
+			(
+				(out LoadSettings? settings) =>
+				{
+					settings = new LoadSettings();
+					return true;
+				}
+			)
+			.Verifiable()
+			;
+
+		var manager = new SettingsManager<string>(sinkMock.Object, serializerMock.Object, cacheMock.Object);
+
+		// Act
+		var settings = manager.Load<LoadSettings>();
+
+		// Assert
+		Assert.That(settings.Raised, Is.False);
+		sinkMock.Verify(mock => mock.Retrieve<LoadSettings>(), Times.Never);
+		serializerMock.Verify(mock => mock.Deserialize<LoadSettings>(It.IsAny<string>(), out It.Ref<ExpandoObject?>.IsAny), Times.Never);
+		cacheMock.Verify(mock => mock.TryGet(out It.Ref<LoadSettings?>.IsAny), Times.Once);
+	}
+
 	/// <summary> Checks that the <see cref="SettingsManager{TSettingsData}"/> automatically adds loaded <see cref="ISettings"/> to the <see cref="SettingsExtensions.Cache"/>. </summary>
 	[Test]
-	public void Check_Load_Adds_Instance_To_SettingsExtensions_Cache()
+	public void LoadAddsInstanceToSettingsExtensionsCache()
 	{
 		// Arrange
 		var manager = _fixture.Create<Mock<SettingsManager<string>>>().Object;
@@ -459,7 +536,7 @@ public class SettingsManagerTest
 	#region Delete
 
 	[Test]
-	public void Check_Delete_Calls_Sink()
+	public void DeleteCallsSink()
 	{
 		// Arrange
 		var sink = _fixture.Create<Mock<ISettingsSink<string>>>().Object;
@@ -475,7 +552,7 @@ public class SettingsManagerTest
 	}
 
 	[Test]
-	public void Check_Delete_Removes_Cached_Instance()
+	public void DeleteRemovesCachedInstance()
 	{
 		// Arrange
 		var settings = new Settings();
@@ -498,7 +575,7 @@ public class SettingsManagerTest
 		manager.Delete<Settings>(false);
 
 		// Assert
-		Assert.IsEmpty(internalCache);
+		Assert.That(internalCache, Is.Empty);
 	}
 
 	#endregion

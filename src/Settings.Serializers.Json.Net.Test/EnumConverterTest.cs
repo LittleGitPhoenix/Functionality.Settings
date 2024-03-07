@@ -42,7 +42,16 @@ public class EnumConverterTest
 
 	class MyNullableSettings : ISettings
 	{
-		public MyEnum? First { get; init; } = null;
+		public MyEnum? First { get; init; }
+	}
+
+	class DictionarySettings : ISettings
+	{
+		public Dictionary<MyEnum, MyEnum> Dict { get; init; } = new()
+		{
+			{MyEnum.Entry1, MyEnum.Entry2},
+			{MyEnum.Entry2, MyEnum.Entry1},
+		};
 	}
 
 	enum MyEnum
@@ -52,7 +61,7 @@ public class EnumConverterTest
 		Entry2,
 	}
 
-	private static string MyEnumSuffix = $" [{nameof(MyEnum.Default)}, {nameof(MyEnum.Entry1)}, {nameof(MyEnum.Entry2)}]";
+	private static readonly string MyEnumSuffix = $" [{nameof(MyEnum.Default)}, {nameof(MyEnum.Entry1)}, {nameof(MyEnum.Entry2)}]";
 
 	enum MyEnumWithoutDefault
 	{
@@ -78,7 +87,7 @@ public class EnumConverterTest
 		I = 0b_0100,
 	}
 
-	private static string MyFlagsSuffix = $" [{nameof(MyFlags.God)}, {nameof(MyFlags.Me)}, {nameof(MyFlags.Myself)}, {nameof(MyFlags.I)}]";
+	private static readonly string MyFlagsSuffix = $" [{nameof(MyFlags.God)}, {nameof(MyFlags.Me)}, {nameof(MyFlags.Myself)}, {nameof(MyFlags.I)}]";
 
 	#endregion
 
@@ -125,7 +134,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -141,7 +150,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -157,7 +166,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -173,7 +182,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -189,7 +198,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -205,7 +214,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -238,7 +247,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.Null(actual);
+		Assert.That(actual, Is.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -256,7 +265,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -274,7 +283,7 @@ public class EnumConverterTest
 		var actual = converter.Deserialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -343,7 +352,7 @@ public class EnumConverterTest
 		var actual = converter.Serialize(value);
 
 		// Assert
-		Assert.NotNull(actual);
+		Assert.That(actual, Is.Not.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -374,7 +383,7 @@ public class EnumConverterTest
 		var actual = converter.Serialize(value);
 
 		// Assert
-		Assert.Null(actual);
+		Assert.That(actual, Is.Null);
 		Assert.That(actual, Is.EqualTo(target));
 	}
 
@@ -397,7 +406,7 @@ public class EnumConverterTest
 		
 		// Assert + Assert
 		var deserializedSettings = serializer.Deserialize<MySettings>(settingsData);
-		Assert.NotNull(deserializedSettings);
+		Assert.That(deserializedSettings, Is.Not.Null);
 		Assert.That(deserializedSettings!.First, Is.EqualTo(settings.First));
 		Assert.That(deserializedSettings!.Second, Is.EqualTo(settings.Second));
 	}
@@ -419,12 +428,12 @@ public class EnumConverterTest
 		
 		// Assert + Assert
 		var deserializedSettings = serializer.Deserialize<MyNullableSettings>(settingsData);
-		Assert.NotNull(deserializedSettings);
+		Assert.That(deserializedSettings, Is.Not.Null);
 		Assert.That(deserializedSettings!.First, Is.EqualTo(settings.First));
 	}
 	
 	[Test]
-	public void SerializedNullableEnumPropertyDoesNotHaveQuatationMarks()
+	public void SerializedNullableEnumPropertyDoesNotHaveQuotationMarks()
 	{
 		// Arrange
 		var converter = new EnumConverter();
@@ -440,8 +449,62 @@ public class EnumConverterTest
 		
 		// Assert + Assert
 		var deserializedSettings = serializer.Deserialize<MyNullableSettings>(settingsData);
-		Assert.NotNull(deserializedSettings);
+		Assert.That(deserializedSettings, Is.Not.Null);
 		Assert.That(deserializedSettings!.First, Is.EqualTo(settings.First));
+	}
+	
+	[Test]
+	public void SerializeEnumDictionaryProperty()
+	{
+		// Arrange
+		var converter = new EnumConverter();
+		var serializer = new JsonSettingsSerializer(converter);
+		var settings = new DictionarySettings();
+
+		// Act + Assert
+		var settingsData = serializer.Serialize(settings);
+		Console.WriteLine(settingsData);
+		Assert.That(settingsData, Is.Not.Empty);
+		Assert.Multiple
+		(
+			() =>
+			{
+				Assert.That(settingsData, Does.Contain($"\"Entry1\": \"Entry2\""));
+				Assert.That(settingsData, Does.Contain($"\"Entry2\": \"Entry1\""));
+			}
+		);
+		
+		// Assert + Assert
+		var deserializedSettings = serializer.Deserialize<DictionarySettings>(settingsData);
+		Assert.That(deserializedSettings, Is.Not.Null);
+		Assert.That(deserializedSettings!.Dict, Is.EqualTo(settings.Dict));
+	}
+
+	[Test]
+	public void SerializeEnumDictionaryPropertyWithWriteOut()
+	{
+		// Arrange
+		var converter = new EnumConverter(WriteOutValues.AsSuffix(start: "[", separator: ";", end: "]"));
+		var serializer = new JsonSettingsSerializer(converter);
+		var settings = new DictionarySettings();
+
+		// Act + Assert
+		var settingsData = serializer.Serialize(settings);
+		Console.WriteLine(settingsData);
+		Assert.That(settingsData, Is.Not.Empty);
+		Assert.Multiple
+		(
+			() =>
+			{
+				Assert.That(settingsData, Does.Contain("\"Entry1\": \"Entry2 [Default;Entry1;Entry2]\""));
+				Assert.That(settingsData, Does.Contain("\"Entry2\": \"Entry1 [Default;Entry1;Entry2]\""));
+			}
+		);
+
+		// Assert + Assert
+		var deserializedSettings = serializer.Deserialize<DictionarySettings>(settingsData);
+		Assert.That(deserializedSettings, Is.Not.Null);
+		Assert.That(deserializedSettings!.Dict, Is.EqualTo(settings.Dict));
 	}
 
 	#endregion

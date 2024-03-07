@@ -9,7 +9,7 @@ namespace Phoenix.Functionality.Settings;
 /// <summary>
 /// Common implementation of an <see cref="ISettingsManager"/> using an <see cref="ISettingsSink"/> for persistent storage and an <see cref="ISettingsSerializer"/> for (de)serializing <see cref="ISettings"/> instances.
 /// </summary>
-/// <typeparam name="TSettingsData"> The type of the data that is used to store the settings outside of the application life cycle. </typeparam>
+/// <typeparam name="TSettingsData"> The type of the data that is used to store the settings outside the application life cycle. </typeparam>
 public class SettingsManager<TSettingsData> : ISettingsManager
 	where TSettingsData : class
 {
@@ -75,10 +75,13 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 		{
 			// Check the cache for an existing instance and imitatively return it.
 #if NETFRAMEWORK || NETSTANDARD2_0
-			if (!bypassCache && _cache.TryGet<TSettings>(out var settings) && settings is not null) return settings;
+			if (!bypassCache && _cache.TryGet<TSettings>(out var settings) && settings is not null)
 #else
-			if (!bypassCache && _cache.TryGet<TSettings>(out var settings)) return settings;
+			if (!bypassCache && _cache.TryGet<TSettings>(out var settings))
 #endif
+			{
+				return settings;
+			}
 
 			// Get the data.
 			var settingsData = _sink.Retrieve<TSettings>();
@@ -126,7 +129,9 @@ public class SettingsManager<TSettingsData> : ISettingsManager
 			// Update the cache if needed.
 			if (!bypassCache) _cache.AddOrUpdate(settings);
 
-			// Return the instance.
+			// Raise the loaded event (if necessary) and return the instance.
+			// ReSharper disable once SuspiciousTypeConversion.Global → This is okay. 'ISettingsLoadedNotification' is supposed to be added together with the 'ISettings' interface.
+			(settings as ISettingsLoadedNotification)?.Loaded();
 			return settings;
 		}
 	}

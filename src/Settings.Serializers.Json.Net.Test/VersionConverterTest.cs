@@ -44,8 +44,8 @@ public class VersionConverterTest
 		var version = converter.Deserialize(value);
 			
 		// Assert
-		Assert.NotNull(version);
-		Assert.AreEqual(targetVersion, version);
+		Assert.That(version, Is.Not.Null);
+		Assert.That(targetVersion, Is.EqualTo(version));
 	}
 
 	[Test]
@@ -59,7 +59,7 @@ public class VersionConverterTest
 		var version = converter.Deserialize(value);
 
 		// Assert
-		Assert.Null(version);
+		Assert.That(version, Is.Null);
 	}
 
 	[Test]
@@ -74,8 +74,8 @@ public class VersionConverterTest
 		var value = converter.Serialize(version);
 
 		// Assert
-		Assert.NotNull(value);
-		Assert.AreEqual(targetValue, value);
+		Assert.That(value, Is.Not.Null);
+		Assert.That(targetValue, Is.EqualTo(value));
 	}
 
 	[Test]
@@ -89,7 +89,7 @@ public class VersionConverterTest
 		var value = converter.Serialize(version);
 
 		// Assert
-		Assert.Null(value);
+		Assert.That(value, Is.Null);
 	}
 
 	#endregion

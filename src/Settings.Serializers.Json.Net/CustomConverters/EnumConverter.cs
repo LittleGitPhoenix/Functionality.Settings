@@ -89,18 +89,10 @@ public class EnumConverter : JsonConverterFactory
 	/// </summary>
 	internal class InternalEnumConverterHelper
 	{
-		internal static readonly Random Random;
-
 		/// <summary>
-		/// Matches the first whitespace not preceded by a comma and everything afterwards.
+		/// Matches the first whitespace not preceded by a comma and everything afterward.
 		/// </summary>
-		internal static readonly Regex ValueCleanRegEx;
-
-		static InternalEnumConverterHelper()
-		{
-			Random = new Random();
-			ValueCleanRegEx = new Regex(@"(?<!,) .*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		}
+		internal static Regex ValueCleanRegEx { get; } = new(@"(?<!,) .*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 	}
 
 	/// <summary>
@@ -161,6 +153,10 @@ public class EnumConverter : JsonConverterFactory
 		public override TEnum? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			=> this.Deserialize(reader.GetString());
 
+		/// <inheritdoc />
+		public override TEnum ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			=> this.Deserialize(reader.GetString());
+
 		internal TEnum? Deserialize(string? value)
 		{
 			value = CleanEnumValue(value);
@@ -196,18 +192,27 @@ public class EnumConverter : JsonConverterFactory
 		#region Serialization
 
 		/// <inheritdoc />
-		public override void Write(Utf8JsonWriter writer, TEnum? enumeration, JsonSerializerOptions _)
+		public override void Write(Utf8JsonWriter writer, TEnum? enumeration, JsonSerializerOptions options)
 		{
-			var enumString = this.Serialize(enumeration);
+			var enumString = this.Serialize(enumeration, false);
+			if (enumString is not null && options.PropertyNamingPolicy is not null) enumString = options.PropertyNamingPolicy.ConvertName(enumString);
 			writer.WriteStringValue(enumString);
 		}
 
-		internal string?  Serialize(TEnum? enumeration)
+		/// <inheritdoc />
+		public override void WriteAsPropertyName(Utf8JsonWriter writer, TEnum? enumeration, JsonSerializerOptions options)
 		{
-			var enumString = enumeration?.ToString(); 
+			var enumString = this.Serialize(enumeration, true) ?? "null";
+			if (options.PropertyNamingPolicy is not null) enumString = options.PropertyNamingPolicy.ConvertName(enumString);
+			writer.WritePropertyName(enumString);
+		}
+
+		internal string? Serialize(TEnum? enumeration, bool blockWriteOut = false)
+		{
+			var enumString = enumeration?.ToString();
 			var enumValues = GetEnumerationValues(_enumType, _isNullable);
 
-			if (_options.WriteOutOptions is ValueWriteOutAsSuffix suffixOptions)
+			if (!blockWriteOut && _options.WriteOutOptions is ValueWriteOutAsSuffix suffixOptions)
 			{
 				var suffix = $" {suffixOptions.Start}{String.Join(suffixOptions.Separator, enumValues)}{suffixOptions.End}";
 				return $"{enumString ?? "null"}{suffix}";

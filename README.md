@@ -90,6 +90,18 @@ ___
 
 Settings are represented as classes implementing the empty `ISettings` interface. The purpose of that interface is a more straightforward way to identify settings throughout an application. It is also used for extension methods, that otherwise would have to extend the **Object** base class, which would be less ideal.
 
+## Events
+
+To react on events that may occur while loading settings, separate interfaces forcing implementation of special callbacks are available. They must be added to the settings class additionally to the `ISettings` interface. Invoking those callbacks is the responsibility of the `ISettingsManager`.  The default [`SettingsManager`](#SettingsManager) will do so.
+
+Currently the following are available:
+
+| Interface Name                       | Description                                                  | Remarks                                              |
+| ------------------------------------ | ------------------------------------------------------------ | ---------------------------------------------------- |
+| `ISettingsLayoutChangedNotification` | Invoked if settings have been loaded but their layout differs from the underlying data. |                                                      |
+| `ISettingsLoadedNotification`        | Invoked if a new settings instance was created during loading. | Will always be invoked despite other similar events. |
+
+
 
 ## Attributes
 
@@ -133,9 +145,9 @@ Specific implementations of `ISettingsSink`s are provided as separate NuGet pack
 
 ## Sinks.File
 
-| .NET Framework | .NET Standard | .NET |
+| .NET | .NET Standard | .NET Framework |
 | :-: | :-: | :-: |
-| :heavy_minus_sign: | :heavy_check_mark: 2.0 | :heavy_check_mark: 5.0 :heavy_check_mark: 6.0 |
+| :heavy_check_mark: 6.0 :heavy_check_mark: 8.0 | :heavy_check_mark: 2.0 | :heavy_minus_sign: |
 
 This sink uses the normal file system to store `Isettings` as file. The file name is created from the settings class and suffixed with a configurable extension. The name of the file itself can be changed by attributing the settings class with the `SettingsFileNameAttribute` (see [Attributes](#Attributes)).
 
@@ -159,6 +171,10 @@ ___
 Specific implementations of `ISettingsSerializer`s are provided as separate NuGet packages. Currently the following are available.
 
 ## Serializers.Json.Net
+
+| .NET | .NET Standard | .NET Framework |
+| :-: | :-: | :-: |
+| :heavy_check_mark: 6.0 :heavy_check_mark: 8.0 | :heavy_check_mark: 2.0 | :heavy_minus_sign: |
 
 This serializer converts to and from the common **JSON** format. Serialization and deserialization is leveraged to **System.Text.Json**.
 
@@ -193,15 +209,8 @@ The package provides special converters that allow for some common types to be u
 
 Those converters support relative path if a _base directory_ has been specified when creating the converters. If settings are loaded and saved, the converter checks if the path of any **FileInfo** or **DirectoryInfo** property could be expressed as a path relative to the specified _base directory_.
 
-<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
-	<span style='margin-left:1em; text-align:left'>
-    	<b>Information</b>
-    </span>
-    <br>
-	<div style='margin-left:1em; margin-right:1em;'>
-		Relative path are only supported with up to three parent folders (e.g <b>../../.../MyFolder/Some.file</b>). Other files will be saved as absolute path.
-    </div>
-</div>
+> [!NOTE]
+> Relative path are only supported with up to three parent folders (e.g **../../.../MyFolder/Some.file**). Other files will be saved as absolute path.
 
 #### `IpAddressConverter`
 
@@ -264,41 +273,21 @@ ___
 
 # Encryption
 
-| .NET Framework | .NET Standard | .NET |
+| .NET | .NET Standard | .NET Framework |
 | :-: | :-: | :-: |
-| :heavy_minus_sign: | :heavy_check_mark: 2.0 | :heavy_check_mark: 5.0 :heavy_check_mark: 6.0 |
+| :heavy_check_mark: 6.0 :heavy_check_mark: 8.0 | :heavy_check_mark: 2.0 | :heavy_minus_sign: |
 
-<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ff0000; background-color: #ff000020' >
-	<span style='margin-left:1em; text-align:left'>
-    	<b>Warning</b>
-    </span>
-    <br>
-	<div style='margin-left:1em; margin-right:1em;'>
-		Please note, that this is not a cryptografic centered assembly. Therefore you shoul probably not try and use it to save your BitCoin mnemonic.
-    </div>
-</div>
+> [!WARNING]
+> Please note, that this is not a cryptographic centered assembly. Therefore you should probably not try and use it to save your Bitcoin mnemonic.
 
-<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
-	<span style='margin-left:1em; text-align:left'>
-    	<b>Information</b>
-    </span>
-    <br>
-	<div style='margin-left:1em; margin-right:1em;'>
-		Encryption is based on <b>AesManaged</b>. The key and vector used to create the symetric encryptor can be specified with an overload of the <i>ApplyEncryption</i> extension method.
-    </div>
-</div>
+> [!NOTE]
+> Encryption is based on **AesManaged**. The key and vector used to create the symmetric encryptor can be specified with an overload of the `ApplyEncryption` extension method.
 
 Some information stored in setting files (like database connection strings) may contain sensitive data and should therefore be encrypted.  This can be achieved via the special `EncryptSettingsManager` . It is a decorator for any other `ISettingsManager` and handles de- or encryption of properties attributed with the `EncryptAttribute`.
 
-<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #37ff00; background-color: #37ff0020' >
-	<span style='margin-left:1em; text-align:left'>
-    	<b>Information</b>
-    </span>
-    <br>
-	<div style='margin-left:1em; margin-right:1em;'>
-        Currently only <b>String</b> or <b>Object</b> properties supported. Those can also be wrapped inside arrays or lists.
-    </div>
-</div>
+> [!NOTE]
+> Currently only **String** or **Object** properties supported. Those can also be wrapped inside arrays or lists.
+
 To use the `EncryptSettingsManager` simply call the extension method `ApplyEncryption` on any other `ISettingsManager` instance.
 
 ```c#
@@ -324,26 +313,14 @@ var settingsManager = SettingsManager<string>
 
 When loading settings, the `EncryptSettingsManager` traverses all properties of the corresponding settings instance searching for the `EncryptAttribute` to decrypt their values, so accessing them from code will always return meaningful data. The `EncryptSettingsManager` handles nested properties as well as certain collection types and recursively traverses them as well.
 
-<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ffd200; background-color: #ffd20020' >
-	<span style='margin-left:1em; text-align:left'>
-    	<b>Advice</b>
-    </span>
-    <br>
-	<div style='margin-left:1em; margin-right:1em;'>
-		To only recursively traverse user-created types the <i>EncryptSettingsManager</i> must distingusih those types from the <b>.NET</b> build-in types. To make this possible (especially within apps that are published as single-file executable) the manager will not traverse into  types that come from assemblies whose name starts with <b>System</b>.<br>The <b><i>EncryptForceFollowAttribute</i></b> can be used in cases where this may be undesireable, to force the <i>EncryptSettingsManager</i> to traverse the attributed property nevertheless.<br>The <b><i>EncryptDoNotFollowAttribute</i></b> on the other side will instruct the manager to not traverse the attributed property.
-    </div>
-</div>
+> [!IMPORTANT]
+> To only recursively traverse user-created types the `EncryptSettingsManager` must distingusih those types from the **.NET** build-in types. To make this possible (especially within apps that are published as single-file executable) the manager will not traverse into  types that come from assemblies whose name starts with **System**.
+>
+> - The `EncryptForceFollowAttribute` can be used in cases where this may be undesirable, to force the `EncryptSettingsManager` to traverse the attributed property nevertheless.
+> - The `EncryptDoNotFollowAttribute` on the other side will instruct the manager to not traverse the attributed property.
 
-<div style='padding:0.1em; border-style: solid; border-width: 0px; border-left-width: 10px; border-color: #ff0000; background-color: #ff000020' >
-	<span style='margin-left:1em; text-align:left'>
-    	<b>Warning</b>
-    </span>
-    <br>
-	<div style='margin-left:1em; margin-right:1em;'>
-		Encryption is automatically applied when a settings instance is <b>loaded</b>. This means, that loading encrypts the value in the source of the settings. It is therefore recommended to only use encryption in release builds via a preprocessor directives.
-    </div>
-</div>
-
+> [!WARNING]
+> Encryption is automatically applied when a settings instance is **loaded**. This means, that loading encrypts the value in the source of the settings. It is therefore recommended to only use encryption in release builds via a preprocessor directives.
 ___
 
 # Authors

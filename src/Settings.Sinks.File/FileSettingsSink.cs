@@ -33,7 +33,7 @@ public class FileSettingsSink : ISettingsSink<string>
 	/// <summary>
 	/// The directory where all setting files reside.
 	/// </summary>
-	/// <remarks> By default this is a folder named <see cref="DefaultSettingsFolderName"/> in <see cref="Directory.GetCurrentDirectory"/>. </remarks>
+	/// <remarks> By default, this is a folder named <see cref="DefaultSettingsFolderName"/> in <see cref="Directory.GetCurrentDirectory"/>. </remarks>
 	private readonly DirectoryInfo _baseDirectory;
 
 	#endregion
@@ -170,8 +170,7 @@ public class FileSettingsSink : ISettingsSink<string>
 	/// </summary>
 	/// <param name="fullSettingsFileName"> The full name of the settings file. </param>
 	/// <returns> A <see cref="FileInfo"/> reference to the settings file. </returns>
-	private FileInfo GetSettingsFile(string fullSettingsFileName)
-		=> new FileInfo(fullSettingsFileName);
+	private FileInfo GetSettingsFile(string fullSettingsFileName) => new(fullSettingsFileName);
 
 	/// <summary>
 	/// Deletes the <paramref name="settingsFile"/> if it exists.

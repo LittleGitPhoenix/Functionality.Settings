@@ -45,9 +45,9 @@ public class RegexConverterTest
 		var regex = converter.Deserialize(targetPattern);
 		
 		// Assert
-		Assert.True(regex.IsMatch(lookup));
-		Assert.False(regex.IsMatch(_fixture.Create<string>()));
-		Assert.AreEqual(RegexConverter.DefaultRegexOptions, regex.Options);
+		Assert.That(regex.IsMatch(lookup), Is.True);
+		Assert.That(regex.IsMatch(_fixture.Create<string>()), Is.False);
+		Assert.That(RegexConverter.DefaultRegexOptions, Is.EqualTo(regex.Options));
 	}
 
 	[Test]
@@ -61,7 +61,7 @@ public class RegexConverterTest
 		var regex = converter.Deserialize(_fixture.Create<string>());
 		
 		// Assert
-		Assert.AreEqual(customOptions, regex.Options);
+		Assert.That(customOptions, Is.EqualTo(regex.Options));
 	}
 
 	[Test]
@@ -75,8 +75,8 @@ public class RegexConverterTest
 		var regex = converter.Deserialize(targetPattern);
 		
 		// Assert
-		Assert.AreEqual(RegexConverter.DefaultFallbackPattern, regex.ToString());
-		Assert.AreEqual(RegexConverter.DefaultRegexOptions, regex.Options);
+		Assert.That(RegexConverter.DefaultFallbackPattern, Is.EqualTo(regex.ToString()));
+		Assert.That(RegexConverter.DefaultRegexOptions, Is.EqualTo(regex.Options));
 	}
 
 	[Test]
@@ -91,8 +91,8 @@ public class RegexConverterTest
 		var regex = converter.Deserialize(targetPattern);
 
 		// Assert
-		Assert.AreEqual(customFallback, regex.ToString());
-		Assert.AreEqual(RegexConverter.DefaultRegexOptions, regex.Options);
+		Assert.That(customFallback, Is.EqualTo(regex.ToString()));
+		Assert.That(RegexConverter.DefaultRegexOptions, Is.EqualTo(regex.Options));
 	}
 
 	[Test]
@@ -108,7 +108,7 @@ public class RegexConverterTest
 		var actualPattern = converter.Serialize(regex);
 
 		// Assert
-		Assert.AreEqual(targetPattern, actualPattern);
+		Assert.That(targetPattern, Is.EqualTo(actualPattern));
 	}
 
 	#endregion
